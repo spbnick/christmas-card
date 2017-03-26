@@ -6,10 +6,10 @@
 #include <stdbool.h>
 
 /** SPI peripheral to use to talk to LEDs */
-static struct spi *LEDS_SPI;
+static volatile struct spi *LEDS_SPI;
 
 /** The GPIO peripheral controlling the load-enable (LE) pin */
-static struct gpio *LEDS_LE_GPIO;
+static volatile struct gpio *LEDS_LE_GPIO;
 
 /** The GPIO pin controlling the load-enable (LE) pin */
 static unsigned int LEDS_LE_PIN;
@@ -36,7 +36,9 @@ static volatile uint8_t LEDS_PWM_BANKS[2][LEDS_BR_MAX + 1][LEDS_NUM / 8];
 static volatile size_t LEDS_PWM_BANK;
 
 void
-leds_init(struct spi *spi, struct gpio *le_gpio, unsigned int le_pin)
+leds_init(volatile struct spi *spi,
+          volatile struct gpio *le_gpio,
+          unsigned int le_pin)
 {
     size_t bank;
     uint8_t step;
