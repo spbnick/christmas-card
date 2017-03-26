@@ -34,20 +34,24 @@ extern void leds_init(volatile struct spi *spi,
                       unsigned int le_pin);
 
 /**
- * Render current brightness of each LED into PWM data and make it available
- * for sending.
+ * Render current brightness of each LED into the inactive PWM data bank.
  */
 extern void leds_render(void);
 
 /**
- * Send the LED state for the specified PWM step
+ * Swap the active and inactive PWM data banks.
+ */
+extern void leds_swap(void);
+
+/**
+ * Send the specified LED state step of the active PWM data bank.
  *
  * @param step  The step to output. Must be <= LEDS_BR_MAX.
  */
 extern void leds_step_send(size_t step);
 
 /**
- * Load the last output LED state for a PWM step.
+ * Load the last sent LED state.
  */
 extern void leds_step_load(void);
 

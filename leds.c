@@ -87,9 +87,12 @@ leds_render(void)
                 (LEDS_BR_PL[LEDS_BR[i]] > step) << (i & 0x7);
         }
     }
+}
 
-    /* Switch to the inactive bank */
-    LEDS_PWM_BANK = bank;
+void
+leds_swap(void)
+{
+    LEDS_PWM_BANK = !LEDS_PWM_BANK;
 }
 
 void

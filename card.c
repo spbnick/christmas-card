@@ -145,6 +145,7 @@ reset(void)
             LEDS_BR[i] = LEDS_BR_MAX / 3;
         }
         leds_render();
+        leds_swap();
     }
 
     /* Initialize the systick handler */
