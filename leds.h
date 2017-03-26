@@ -13,8 +13,11 @@
 /** Number of LEDs */
 #define LEDS_NUM        40
 
+/** Number of LED brightness values */
+#define LEDS_BR_NUM     (64)
+
 /** Maximum LED brightness value */
-#define LEDS_BR_MAX     63
+#define LEDS_BR_MAX     (LEDS_BR_NUM - 1)
 
 /** Brightness value of each LED */
 extern uint8_t LEDS_BR[LEDS_NUM];

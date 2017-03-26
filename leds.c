@@ -15,7 +15,7 @@ static volatile struct gpio *LEDS_LE_GPIO;
 static unsigned int LEDS_LE_PIN;
 
 /** Brightness value to pulse length map */
-static const uint8_t LEDS_BR_PL[LEDS_BR_MAX + 1] = {
+static const uint8_t LEDS_BR_PL[LEDS_BR_NUM] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
     0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x02, 0x02,
     0x02, 0x02, 0x02, 0x03, 0x03, 0x03, 0x03, 0x04,
@@ -30,7 +30,7 @@ static const uint8_t LEDS_BR_PL[LEDS_BR_MAX + 1] = {
 uint8_t LEDS_BR[LEDS_NUM];
 
 /** State of each LED for each PWM step, in two banks */
-static volatile uint8_t LEDS_PWM_BANKS[2][LEDS_BR_MAX + 1][LEDS_NUM / 8];
+static volatile uint8_t LEDS_PWM_BANKS[2][LEDS_BR_NUM][LEDS_NUM / 8];
 
 /** Index of the PWM LED state bank currently being output */
 static volatile size_t LEDS_PWM_BANK;
