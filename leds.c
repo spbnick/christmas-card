@@ -75,15 +75,14 @@ const uint8_t LEDS_STARS_LIST[LEDS_STARS_NUM] = {
     20, 24, 29, 30, 21, 28, 22, 7, 23
 };
 
-const uint8_t LEDS_TREE_LIST[LEDS_TREE_NUM] = {
-    32, 6, 33, 13, 5, 34, 14, 12, 4, 3, 36,
+const uint8_t LEDS_BALLS_LIST[LEDS_BALLS_NUM] = {
+    6, 33, 13, 5, 34, 14, 12, 4, 3, 36,
     11, 10, 37, 2, 38, 9, 39, 0, 35, 8, 1
 };
 
-const uint8_t LEDS_TREE_SWNE_LINE_LIST[LEDS_TREE_SWNE_LINE_NUM]
-                                      [LEDS_TREE_SWNE_LINE_LEN] = {
+const uint8_t LEDS_BALLS_SWNE_LINE_LIST[LEDS_BALLS_SWNE_LINE_NUM]
+                                       [LEDS_BALLS_SWNE_LINE_LEN] = {
 #define LINE(_leds...) {_leds, LEDS_IDX_INVALID}
-    LINE(32),
     LINE(33, 6),
     LINE(5, 13),
     LINE(3, 12, 34),

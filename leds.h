@@ -31,31 +31,32 @@ extern uint8_t LEDS_BR[LEDS_NUM];
 /** List of indexes of star LEDs, left-to-right, top-to-bottom */
 extern const uint8_t LEDS_STARS_LIST[LEDS_STARS_NUM];
 
-/** Number of tree LEDs */
-#define LEDS_TREE_NUM  22
+/** Index of the treetopper LED */
+#define LEDS_TOPPER     32
+
+/** Number of ball LEDs */
+#define LEDS_BALLS_NUM  21
 
 /**
- * List of indexes of tree LEDs, left-to-right, top-to-bottom,
- * starting with the star.
+ * List of indexes of ball LEDs, left-to-right, top-to-bottom.
  */
-extern const uint8_t LEDS_TREE_LIST[LEDS_TREE_NUM];
+extern const uint8_t LEDS_BALLS_LIST[LEDS_BALLS_NUM];
 
 /**
- * Maximum length of a tree southwest-northeast diagonal LED line,
+ * Maximum length of a southwest-northeast diagonal line of ball LEDs,
  * including terminating invalid index
  */
-#define LEDS_TREE_SWNE_LINE_LEN  6
+#define LEDS_BALLS_SWNE_LINE_LEN  6
 
-/** Number of tree southwest-northeast diagonal LED lines */
-#define LEDS_TREE_SWNE_LINE_NUM  8
+/** Number of southwest-northeast diagonal lines of ball LEDs */
+#define LEDS_BALLS_SWNE_LINE_NUM  7
 
 /**
- * List of tree southwest-northeast diagonal LED lines, top-to-bottom,
- * starting with the star. Each line contains LED indexes terminated by the
- * invalid LED index.
+ * List of southwest-northeast diagonal lines of ball LEDs, top-to-bottom.
+ * Each line contains LED indexes terminated by the invalid LED index.
  */
-extern const uint8_t LEDS_TREE_SWNE_LINE_LIST[LEDS_TREE_SWNE_LINE_NUM]
-                                             [LEDS_TREE_SWNE_LINE_LEN];
+extern const uint8_t LEDS_BALLS_SWNE_LINE_LIST[LEDS_BALLS_SWNE_LINE_NUM]
+                                              [LEDS_BALLS_SWNE_LINE_LEN];
 
 /**
  * Initialize LEDs module.

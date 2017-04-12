@@ -76,7 +76,7 @@ anim_fx_stars_fade_in(bool first, void **pnext_fx)
 }
 
 static unsigned int
-anim_fx_tree_wave(bool first, void **pnext_fx)
+anim_fx_balls_wave(bool first, void **pnext_fx)
 {
     static ssize_t step;
     ssize_t i, j, k;
@@ -90,8 +90,8 @@ anim_fx_tree_wave(bool first, void **pnext_fx)
     }
 
     /* For each line of balls */
-    for (i = 1; i < (ssize_t)ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST); i++) {
-        switch (i - 1 - step) {
+    for (i = 0; i < (ssize_t)ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST); i++) {
+        switch (i - step) {
             case 0:
                 br = LEDS_BR_MAX;
                 break;
@@ -104,7 +104,7 @@ anim_fx_tree_wave(bool first, void **pnext_fx)
                 break;
         }
         for (j = 0;
-             (k = LEDS_TREE_SWNE_LINE_LIST[i][j]) != LEDS_IDX_INVALID;
+             (k = LEDS_BALLS_SWNE_LINE_LIST[i][j]) != LEDS_IDX_INVALID;
              j++) {
             LEDS_BR[k] = br;
         }
@@ -112,19 +112,39 @@ anim_fx_tree_wave(bool first, void **pnext_fx)
 
     delay = (step == -2)
                 ? 2000
-                : (1000 / (ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST) - 1 + 4));
+                : (1000 / (ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST) + 4));
 
     step++;
-    if (step >= (ssize_t)ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST) - 1 + 2) {
+    if (step >= (ssize_t)ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST) + 2) {
         step = -2;
     }
 
     return delay;
 }
 
-/** Fade in the tree to 3/4 of max brightness */
+/** Fade in the topper to max brightness */
 static unsigned int
-anim_fx_tree_fade_in(bool first, void **pnext_fx)
+anim_fx_topper_fade_in(bool first, void **pnext_fx)
+{
+    static uint8_t step;
+
+    if (first) {
+        step = 0;
+    }
+
+    LEDS_BR[LEDS_TOPPER] = step;
+    step++;
+
+    if (step == LEDS_BR_MAX) {
+        *pnext_fx = anim_fx_stop;
+    }
+
+    return 1000 / LEDS_BR_NUM;
+}
+
+/** Fade in the balls to 3/4 of max brightness */
+static unsigned int
+anim_fx_balls_fade_in(bool first, void **pnext_fx)
 {
     static unsigned int step;
     size_t i, j, k;
@@ -134,14 +154,14 @@ anim_fx_tree_fade_in(bool first, void **pnext_fx)
         step = 0;
     }
 
-    for (i = 0; i < ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST); i++) {
+    for (i = 0; i < ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST); i++) {
         br = (step > i)
                     ? ((step < i + 4)
                             ? ((step - i) * (LEDS_BR_MAX * 3 )) >> 4
                             : (LEDS_BR_MAX * 3 / 4))
                     : 0;
         for (j = 0;
-             (k = LEDS_TREE_SWNE_LINE_LIST[i][j]) != LEDS_IDX_INVALID;
+             (k = LEDS_BALLS_SWNE_LINE_LIST[i][j]) != LEDS_IDX_INVALID;
              j++) {
             LEDS_BR[k] = br;
         }
@@ -149,11 +169,11 @@ anim_fx_tree_fade_in(bool first, void **pnext_fx)
 
     step++;
 
-    if (step >= ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST) + 4) {
-        *pnext_fx = anim_fx_tree_wave;
+    if (step >= ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST) + 4) {
+        *pnext_fx = anim_fx_balls_wave;
     }
 
-    return 1500 / (ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST) + 4);
+    return 1500 / (ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST) + 4);
 }
 
 /** Animation thread state */
@@ -173,7 +193,7 @@ struct anim_thread {
 };
 
 /** List of thread states */
-struct anim_thread  ANIM_THREADS[2];
+struct anim_thread  ANIM_THREADS[3];
 /** Minimum delay until the next animation step across all threads */
 unsigned int ANIM_DELAY_MIN;
 
@@ -186,7 +206,12 @@ anim_init(void)
         .delay = 0,
     };
     ANIM_THREADS[1] = (struct anim_thread){
-        .fx = anim_fx_tree_fade_in,
+        .fx = anim_fx_topper_fade_in,
+        .first = true,
+        .delay = 1000,
+    };
+    ANIM_THREADS[2] = (struct anim_thread){
+        .fx = anim_fx_balls_fade_in,
         .first = true,
         .delay = 1500,
     };
