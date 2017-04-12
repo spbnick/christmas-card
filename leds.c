@@ -80,7 +80,8 @@ const uint8_t LEDS_TREE_LIST[LEDS_TREE_NUM] = {
     11, 10, 37, 2, 38, 9, 39, 0, 35, 8, 1
 };
 
-const uint8_t LEDS_TREE_LINE_LIST[LEDS_TREE_LINE_NUM][LEDS_TREE_LINE_LEN] = {
+const uint8_t LEDS_TREE_SWNE_LINE_LIST[LEDS_TREE_SWNE_LINE_NUM]
+                                      [LEDS_TREE_SWNE_LINE_LEN] = {
 #define LINE(_leds...) {_leds, LEDS_IDX_INVALID}
     LINE(32),
     LINE(33, 6),

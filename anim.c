@@ -90,7 +90,7 @@ anim_fx_tree_wave(bool first, void **pnext_fx)
     }
 
     /* For each line of balls */
-    for (i = 1; i < (ssize_t)ARRAY_SIZE(LEDS_TREE_LINE_LIST); i++) {
+    for (i = 1; i < (ssize_t)ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST); i++) {
         switch (i - 1 - step) {
             case 0:
                 br = LEDS_BR_MAX;
@@ -104,7 +104,7 @@ anim_fx_tree_wave(bool first, void **pnext_fx)
                 break;
         }
         for (j = 0;
-             (k = LEDS_TREE_LINE_LIST[i][j]) != LEDS_IDX_INVALID;
+             (k = LEDS_TREE_SWNE_LINE_LIST[i][j]) != LEDS_IDX_INVALID;
              j++) {
             LEDS_BR[k] = br;
         }
@@ -112,10 +112,10 @@ anim_fx_tree_wave(bool first, void **pnext_fx)
 
     delay = (step == -2)
                 ? 2000
-                : (1000 / (ARRAY_SIZE(LEDS_TREE_LINE_LIST) - 1 + 4));
+                : (1000 / (ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST) - 1 + 4));
 
     step++;
-    if (step >= (ssize_t)ARRAY_SIZE(LEDS_TREE_LINE_LIST) - 1 + 2) {
+    if (step >= (ssize_t)ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST) - 1 + 2) {
         step = -2;
     }
 
@@ -134,14 +134,14 @@ anim_fx_tree_fade_in(bool first, void **pnext_fx)
         step = 0;
     }
 
-    for (i = 0; i < ARRAY_SIZE(LEDS_TREE_LINE_LIST); i++) {
+    for (i = 0; i < ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST); i++) {
         br = (step > i)
                     ? ((step < i + 4)
                             ? ((step - i) * (LEDS_BR_MAX * 3 )) >> 4
                             : (LEDS_BR_MAX * 3 / 4))
                     : 0;
         for (j = 0;
-             (k = LEDS_TREE_LINE_LIST[i][j]) != LEDS_IDX_INVALID;
+             (k = LEDS_TREE_SWNE_LINE_LIST[i][j]) != LEDS_IDX_INVALID;
              j++) {
             LEDS_BR[k] = br;
         }
@@ -149,11 +149,11 @@ anim_fx_tree_fade_in(bool first, void **pnext_fx)
 
     step++;
 
-    if (step >= ARRAY_SIZE(LEDS_TREE_LINE_LIST) + 4) {
+    if (step >= ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST) + 4) {
         *pnext_fx = anim_fx_tree_wave;
     }
 
-    return 1500 / (ARRAY_SIZE(LEDS_TREE_LINE_LIST) + 4);
+    return 1500 / (ARRAY_SIZE(LEDS_TREE_SWNE_LINE_LIST) + 4);
 }
 
 /** Animation thread state */

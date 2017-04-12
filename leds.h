@@ -40,18 +40,22 @@ extern const uint8_t LEDS_STARS_LIST[LEDS_STARS_NUM];
  */
 extern const uint8_t LEDS_TREE_LIST[LEDS_TREE_NUM];
 
-/** Maximum length of a tree LED line, including terminating invalid index */
-#define LEDS_TREE_LINE_LEN  6
+/**
+ * Maximum length of a tree southwest-northeast diagonal LED line,
+ * including terminating invalid index
+ */
+#define LEDS_TREE_SWNE_LINE_LEN  6
 
-/** Number of tree LED lines */
-#define LEDS_TREE_LINE_NUM  8
+/** Number of tree southwest-northeast diagonal LED lines */
+#define LEDS_TREE_SWNE_LINE_NUM  8
 
 /**
- * List of tree LED lines, top-to-bottom, starting with the star.
- * Each line is terminated by the invalid LED index.
+ * List of tree southwest-northeast diagonal LED lines, top-to-bottom,
+ * starting with the star. Each line contains LED indexes terminated by the
+ * invalid LED index.
  */
-extern const uint8_t
-        LEDS_TREE_LINE_LIST[LEDS_TREE_LINE_NUM][LEDS_TREE_LINE_LEN];
+extern const uint8_t LEDS_TREE_SWNE_LINE_LIST[LEDS_TREE_SWNE_LINE_NUM]
+                                             [LEDS_TREE_SWNE_LINE_LEN];
 
 /**
  * Initialize LEDs module.

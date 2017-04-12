@@ -12,10 +12,10 @@
 extern void anim_init(void);
 
 /**
- * Render the next animation step into the inactive LEDs bank.
+ * Draw the next animation step into the inactive LEDs bank.
  *
  * @return Time in milliseconds the rendered animation step
- *         should begin output since the previous step was.
+ *         should begin output since the previous step had.
  */
 extern unsigned int anim_step(void);
 
