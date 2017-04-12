@@ -61,8 +61,9 @@ extern const uint8_t LEDS_TREE_SWNE_LINE_LIST[LEDS_TREE_SWNE_LINE_NUM]
  * Initialize LEDs module.
  *
  * @param spi       The SPI peripheral to use to write to LEDs.
- * @param le_gpio   The GPIO peripheral controlling the load-enable (LE) pin.
- * @param le_pin    The GPIO pin controlling the load-enable (LE) pin.
+ * @param le_gpio   The GPIO peripheral controlling the load-enable (LE)
+ *                  signal.
+ * @param le_pin    The GPIO pin controlling the load-enable (LE) signal.
  */
 extern void leds_init(volatile struct spi *spi,
                       volatile struct gpio *le_gpio,
