@@ -13,6 +13,9 @@
 /** Number of LEDs */
 #define LEDS_NUM        40
 
+/** Invalid LED index */
+#define LEDS_IDX_INVALID    255
+
 /** Number of LED brightness values */
 #define LEDS_BR_NUM     (64)
 
@@ -21,6 +24,34 @@
 
 /** Brightness value of each LED */
 extern uint8_t LEDS_BR[LEDS_NUM];
+
+/** Number of star LEDs */
+#define LEDS_STARS_NUM  18
+
+/** List of indexes of star LEDs, left-to-right, top-to-bottom */
+extern const uint8_t LEDS_STARS_LIST[LEDS_STARS_NUM];
+
+/** Number of tree LEDs */
+#define LEDS_TREE_NUM  22
+
+/**
+ * List of indexes of tree LEDs, left-to-right, top-to-bottom,
+ * starting with the star.
+ */
+extern const uint8_t LEDS_TREE_LIST[LEDS_TREE_NUM];
+
+/** Maximum length of a tree LED line, including terminating invalid index */
+#define LEDS_TREE_LINE_LEN  6
+
+/** Number of tree LED lines */
+#define LEDS_TREE_LINE_NUM  8
+
+/**
+ * List of tree LED lines, top-to-bottom, starting with the star.
+ * Each line is terminated by the invalid LED index.
+ */
+extern const uint8_t
+        LEDS_TREE_LINE_LIST[LEDS_TREE_LINE_NUM][LEDS_TREE_LINE_LEN];
 
 /**
  * Initialize LEDs module.

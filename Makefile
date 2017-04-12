@@ -12,6 +12,7 @@ LDSCRIPTS = \
 MODS = \
     vectors \
     leds \
+    anim \
     card
 
 OBJS = $(addsuffix .o, $(MODS))

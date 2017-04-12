@@ -5,43 +5,8 @@
  * A5 - SCK     - CLK
  * A6 - MISO    - SDO
  * A7 - MOSI    - SDI
- *
- *
- * Rough map of the LEDs with bit numbers
- *
- *  19W                                        16W
- *                     17W        / \                       27W
- *                              < 32Y >
- *                               |/ \|
- *          18W
- *                                                  26W
- *                                   06R                     25W
- *                  15W
- *       31W
- *                            33Y                      20W
- *                                                                24W
- *               30W                     13G
- *                                                   21W
- *     29W                  05R
- *
- *
- *                                    34Y                       22W
- *          28W                                14G
- *                           12G
- *                                         04R
- *    07W               03R                                 23W
- *
- *                                  36Y           11G
- *
- *                           10G             37Y
- *
- *                                     02R
- *                    38Y        09G             39Y
- *
- *                                         08G
- *                   00R        35Y                   01R
- *
  */
+#include "anim.h"
 #include "leds.h"
 #include <rcc.h>
 #include <gpio.h>
@@ -54,16 +19,23 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define STOP \
-    do {                \
-        asm ("wfi");    \
-    } while (1)
-
 /* SPI peripheral to use to talk to LEDs */
 static volatile struct spi *SPI;
 
 /* Systick handler step */
 static volatile unsigned int SYSTICK_STEP;
+/* True if systick handler must swap LED banks */
+static volatile bool SYSTICK_SWAP_WAIT;
+/*
+ * Value of SYSTICK_STEP at (or after) which systick handler must swap LED
+ * banks. Rounded to PWM step zero.
+ */
+static volatile unsigned int SYSTICK_SWAP_NEXT;
+/* Last value of SYSTICK_STEP at which the LED banks were swapped */
+static volatile unsigned int SYSTICK_SWAP_LAST;
+
+/* The maxmimum lag for swap step time to be considered not overrun */
+#define SYSTICK_SWAP_LAG    ((unsigned int)1 << 31)
 
 /** Systick handler */
 void systick_handler(void) __attribute__ ((isr));
@@ -71,17 +43,31 @@ void
 systick_handler(void)
 {
     /* Current tick value */
-    unsigned int tick = SYSTICK_STEP;
+    unsigned int step = SYSTICK_STEP;
+    unsigned int pwm_step = (step >> 1) & LEDS_BR_MAX;
 
-    if (tick % 24000 == 0) {
+    if (step % 24000 == 0) {
         GPIO_C->odr ^= GPIO_ODR_ODR13_MASK;
     }
 
     /* If it's the odd tick */
-    if (tick & 1) {
+    if (step & 1) {
         leds_step_load();
     } else {
-        leds_step_send((tick >> 1) & LEDS_BR_MAX);
+        /*
+         * If we're on the new PWM cycle, and we are asked to swap the LED PWM
+         * data banks, and the time has arrived (accounting for rollover).
+         */
+        if (pwm_step == 0 &&
+            SYSTICK_SWAP_WAIT &&
+            SYSTICK_SWAP_NEXT <= SYSTICK_STEP &&
+            (SYSTICK_STEP - SYSTICK_SWAP_NEXT < SYSTICK_SWAP_LAG)) {
+            /* Swap the LED banks */
+            leds_swap();
+            SYSTICK_SWAP_LAST = step;
+            SYSTICK_SWAP_WAIT = false;
+        }
+        leds_step_send(pwm_step);
     }
 
     SYSTICK_STEP++;
@@ -135,21 +121,17 @@ reset(void)
                (SPI_CR1_MSTR_VAL_MASTER << SPI_CR1_MSTR_LSB) |
                SPI_CR1_SSM_MASK | SPI_CR1_SSI_MASK | SPI_CR1_SPE_MASK;
 
-    /*
-     * Initialize LED states
-     */
-    {
-        leds_init(SPI, GPIO_A, 4);
-        size_t i;
-        for (i = 0; i < ARRAY_SIZE(LEDS_BR); i++) {
-            LEDS_BR[i] = LEDS_BR_MAX / 3;
-        }
-        leds_render();
-        leds_swap();
-    }
+    /* Initialize LED states */
+    leds_init(SPI, GPIO_A, 4);
+
+    /* Initialize animation state */
+    anim_init();
 
     /* Initialize the systick handler */
     SYSTICK_STEP = 0;
+    SYSTICK_SWAP_WAIT = false;
+    SYSTICK_SWAP_LAST = 0;
+    SYSTICK_SWAP_NEXT = 0;
 
     /*
      * Set SysTick timer to fire the interrupt at frequency 375 * 64 * 2 =
@@ -157,9 +139,20 @@ reset(void)
      * frequency of 375 Hz, 64 pulse lengths, and also trigger Load-Enable
      * every other pulse.
      */
-    STK->val = STK->load = 72000000 / 375 / 64 / 2;
+    STK->val = STK->load = 72000000 / 375 / 64 / 2 - 1;
     STK->ctrl |= STK_CTRL_ENABLE_MASK | STK_CTRL_TICKINT_MASK |
                  (STK_CTRL_CLKSOURCE_VAL_AHB << STK_CTRL_CLKSOURCE_LSB);
 
-    STOP;
+    {
+        unsigned int delay;
+        while (true) {
+            while (SYSTICK_SWAP_WAIT) {
+                asm ("wfi");
+            }
+            delay = anim_step();
+            leds_render();
+            SYSTICK_SWAP_NEXT = SYSTICK_SWAP_LAST + delay * 48;
+            SYSTICK_SWAP_WAIT = true;
+        }
+    }
 }

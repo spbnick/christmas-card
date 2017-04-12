@@ -1,5 +1,40 @@
 /*
  * LEDs control
+ *
+ * Rough map of the LEDs with bit numbers
+ *
+ *  19W                                        16W
+ *                     17W        / \                       27W
+ *                              < 32Y >
+ *                               |/ \|
+ *          18W
+ *                                                  26W
+ *                                   06R                     25W
+ *                  15W
+ *       31W
+ *                            33Y                      20W
+ *                                                                24W
+ *               30W                     13G
+ *                                                   21W
+ *     29W                  05R
+ *
+ *
+ *                                    34Y                       22W
+ *          28W                                14G
+ *                           12G
+ *                                         04R
+ *    07W               03R                                 23W
+ *
+ *                                  36Y           11G
+ *
+ *                           10G             37Y
+ *
+ *                                     02R
+ *                    38Y        09G             39Y
+ *
+ *                                         08G
+ *                   00R        35Y                   01R
+ *
  */
 #include "leds.h"
 #include <misc.h>
@@ -35,6 +70,29 @@ static volatile uint8_t LEDS_PWM_BANKS[2][LEDS_BR_NUM][LEDS_NUM / 8];
 /** Index of the PWM LED state bank currently being output */
 static volatile size_t LEDS_PWM_BANK;
 
+const uint8_t LEDS_STARS_LIST[LEDS_STARS_NUM] = {
+    19, 17, 16, 27, 18, 26, 25, 31, 15,
+    20, 24, 29, 30, 21, 28, 22, 7, 23
+};
+
+const uint8_t LEDS_TREE_LIST[LEDS_TREE_NUM] = {
+    32, 6, 33, 13, 5, 34, 14, 12, 4, 3, 36,
+    11, 10, 37, 2, 38, 9, 39, 0, 35, 8, 1
+};
+
+const uint8_t LEDS_TREE_LINE_LIST[LEDS_TREE_LINE_NUM][LEDS_TREE_LINE_LEN] = {
+#define LINE(_leds...) {_leds, LEDS_IDX_INVALID}
+    LINE(32),
+    LINE(33, 6),
+    LINE(5, 13),
+    LINE(3, 12, 34),
+    LINE(38, 10, 36, 4, 14),
+    LINE(0, 9, 2, 37, 11),
+    LINE(35, 8, 39),
+    LINE(1),
+#undef LINE
+};
+
 void
 leds_init(volatile struct spi *spi,
           volatile struct gpio *le_gpio,
@@ -54,17 +112,17 @@ leds_init(volatile struct spi *spi,
         LEDS_BR[i] = 0;
     }
 
-    /* Set bank 0 active */
-    LEDS_PWM_BANK = 0;
-
-    /* For each PWM step */
-    bank = LEDS_PWM_BANK;
-    for (step = 0; step < ARRAY_SIZE(LEDS_PWM_BANKS[bank]); step++) {
-        /* Zero the step */
-        for (i = 0; i < ARRAY_SIZE(LEDS_PWM_BANKS[bank][step]); i++) {
-            LEDS_PWM_BANKS[bank][step][i] = 0;
+    /* Zero all PWM banks */
+    for (bank = 0; bank < ARRAY_SIZE(LEDS_PWM_BANKS); bank++) {
+        for (step = 0; step < ARRAY_SIZE(LEDS_PWM_BANKS[bank]); step++) {
+            for (i = 0; i < ARRAY_SIZE(LEDS_PWM_BANKS[bank][step]); i++) {
+                LEDS_PWM_BANKS[bank][step][i] = 0;
+            }
         }
     }
+
+    /* Set bank 0 active */
+    LEDS_PWM_BANK = 0;
 }
 
 void
