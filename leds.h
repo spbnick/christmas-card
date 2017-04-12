@@ -17,7 +17,7 @@
 #define LEDS_IDX_INVALID    255
 
 /** Number of LED brightness values */
-#define LEDS_BR_NUM     (64)
+#define LEDS_BR_NUM     64
 
 /** Maximum LED brightness value */
 #define LEDS_BR_MAX     (LEDS_BR_NUM - 1)
