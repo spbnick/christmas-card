@@ -150,7 +150,6 @@ reset(void)
                 asm ("wfi");
             }
             delay = anim_step();
-            leds_render();
             SYSTICK_SWAP_NEXT = SYSTICK_SWAP_LAST + delay * 48;
             SYSTICK_SWAP_WAIT = true;
         }
