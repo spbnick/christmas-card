@@ -31,8 +31,11 @@ extern uint8_t LEDS_BR[LEDS_NUM];
 /** List of indexes of star LEDs, left-to-right, top-to-bottom */
 extern const uint8_t LEDS_STARS_LIST[LEDS_STARS_NUM];
 
-/** Index of the treetopper LED */
-#define LEDS_TOPPER     32
+/** Number of treetopper LEDs */
+#define LEDS_TOPPER_NUM 1
+
+/** List of indexes of treetopper LEDs, left-to-right, top-to-bottom */
+extern const uint8_t LEDS_TOPPER_LIST[LEDS_TOPPER_NUM];
 
 /** Number of ball LEDs */
 #define LEDS_BALLS_NUM  21

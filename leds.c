@@ -75,6 +75,10 @@ const uint8_t LEDS_STARS_LIST[LEDS_STARS_NUM] = {
     20, 24, 29, 30, 21, 28, 22, 7, 23
 };
 
+const uint8_t LEDS_TOPPER_LIST[LEDS_TOPPER_NUM] = {
+    32
+};
+
 const uint8_t LEDS_BALLS_LIST[LEDS_BALLS_NUM] = {
     6, 33, 13, 5, 34, 14, 12, 4, 3, 36,
     11, 10, 37, 2, 38, 9, 39, 0, 35, 8, 1

@@ -127,12 +127,15 @@ static unsigned int
 anim_fx_topper_fade_in(bool first, void **pnext_fx)
 {
     static uint8_t step;
+    size_t i;
 
     if (first) {
         step = 0;
     }
 
-    LEDS_BR[LEDS_TOPPER] = step;
+    for (i = 0; i < ARRAY_SIZE(LEDS_TOPPER_LIST); i++) {
+        LEDS_BR[LEDS_TOPPER_LIST[i]] = step;
+    }
     step++;
 
     if (step == LEDS_BR_MAX) {
