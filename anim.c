@@ -46,12 +46,16 @@ anim_fx_stars_blink(bool first, void **pnext_fx)
 {
     /* Possible state of a dimmed star */
     enum state {
-        /* Bright, waiting to be dimmed */
+        /* Waiting to be dimmed */
         STATE_WAIT,
-        /* Dimmed, waiting to be restored */
+        /* Dimming, half-dimmed */
+        STATE_DIMMER,
+        /* Fully dimmed */
         STATE_DIM,
-        /* Restored, resting */
-        STATE_REST,
+        /* Restoring, half-brightened */
+        STATE_RESTORING,
+        /* Bright (restored), resting */
+        STATE_RESTORED,
         /* Number of states, not a valid state */
         STATE_NUM
     };
@@ -66,8 +70,17 @@ anim_fx_stars_blink(bool first, void **pnext_fx)
         unsigned int    state_delay[STATE_NUM];
     };
 
+    /* LED brightness after the end of each state */
+    static const uint8_t state_next_br[STATE_NUM] = {
+        [STATE_WAIT]        = LEDS_BR_MAX * 5 / 8,
+        [STATE_DIMMER]      = LEDS_BR_MAX / 2,
+        [STATE_DIM]         = LEDS_BR_MAX * 5 / 8,
+        [STATE_RESTORING]   = LEDS_BR_MAX * 3 / 4,
+        [STATE_RESTORED]    = LEDS_BR_MAX * 3 / 4,
+    };
+
     /* State of the stars currently being dimmed */
-    static struct star star_list[4];
+    static struct star star_list[8];
 
     /* Delay since the last invocation */
     static unsigned int delay;
@@ -82,7 +95,7 @@ anim_fx_stars_blink(bool first, void **pnext_fx)
         delay = 0;
         for (i = 0; i < ARRAY_SIZE(star_list); i++) {
             star = &star_list[i];
-            star->state = STATE_REST;
+            star->state = STATE_RESTORED;
             for (j = 0; j < ARRAY_SIZE(star->state_delay); j++) {
                 star->state_delay[j] = 0;
             }
@@ -97,37 +110,23 @@ anim_fx_stars_blink(bool first, void **pnext_fx)
         star = &star_list[i];
         /* If the current state delay is over */
         if ((star->state_delay[star->state] -= delay) == 0) {
-            /* Switch on the state that finished */
-            switch (star->state) {
-                /* Waiting is over */
-                case STATE_WAIT:
-                    /* Dimmed now */
-                    star->state = STATE_DIM;
-                    break;
-                /* Dimming is over */
-                case STATE_DIM:
-                    /* Resting now */
-                    star->state = STATE_REST;
-                    break;
-                /* Resting is over */
-                case STATE_REST:
-                    /* Pick an LED */
-                    star->led = LEDS_STARS_LIST[
-                                    (prng_next() >> 8) *
-                                    (LEDS_STARS_NUM - 1) /
-                                    (PRNG_MAX >> 8)];
-                    /* Pick the wait time */
-                    star->state_delay[STATE_WAIT] = (prng_next() & 0xf) << 9;
-                    /* Set the dim time */
-                    star->state_delay[STATE_DIM] = 0x200;
-                    /* Calculate the rest time */
-                    star->state_delay[STATE_REST] =
-                        0x2000 - star->state_delay[STATE_WAIT];
-                    /* Waiting now */
-                    star->state = STATE_WAIT;
-                    break;
-                default:
-                    break;
+            /* If cycle is over */
+            if (star->state == STATE_RESTORED) {
+                /* Pick an LED */
+                star->led = LEDS_STARS_LIST[
+                                (prng_next() >> 8) *
+                                (LEDS_STARS_NUM - 1) /
+                                (PRNG_MAX >> 8)];
+                star->state_delay[STATE_WAIT] = (prng_next() & 0xf) << 9;
+                star->state_delay[STATE_DIMMER] = 0x80;
+                star->state_delay[STATE_DIM] = 0x100;
+                star->state_delay[STATE_RESTORING] = 0x80;
+                star->state_delay[STATE_RESTORED] =
+                    0x2000 - star->state_delay[STATE_WAIT];
+                /* Waiting now */
+                star->state = STATE_WAIT;
+            } else {
+                star->state++;
             }
         }
         if (star->state_delay[star->state] < new_delay) {
@@ -142,28 +141,12 @@ anim_fx_stars_blink(bool first, void **pnext_fx)
         star = &star_list[i];
         /* If the star is changing on the next step */
         if (star->state_delay[star->state] == new_delay) {
-            /* Switch on the state that is going to be finished */
-            switch (star->state) {
-                /* Waiting will be finished */
-                case STATE_WAIT:
-                    /* Schedule dimming */
-                    LEDS_BR[star->led] = LEDS_BR_MAX / 2;
-                    break;
-                /* Dimming will be finished */
-                case STATE_DIM:
-                    /* Schedule resting */
-                    LEDS_BR[star->led] = LEDS_BR_MAX * 3 / 4;
-                    break;
-                /* Resting will be finished */
-                case STATE_REST:
-                    /* No need to change the LED */
-                    break;
-                default:
-                    break;
-            }
+            /* Schedule brightness change */
+            LEDS_BR[star->led] = state_next_br[star->state];
         }
     }
 
+    /* Call us for the next change */
     return (delay = new_delay);
 }
 
