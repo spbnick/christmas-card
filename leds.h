@@ -77,6 +77,15 @@ extern void leds_init(volatile struct spi *spi,
 extern void leds_render(void);
 
 /**
+ * Render current brightness of specified LEDs into the inactive PWM data
+ * bank.
+ *
+ * @param led_list  Array of indexes of LEDs to render.
+ * @param led_num   Number of LEDs to render from the led_list array.
+ */
+extern void leds_render_list(const uint8_t *led_list, size_t led_num);
+
+/**
  * Swap the active and inactive PWM data banks.
  */
 extern void leds_swap(void);

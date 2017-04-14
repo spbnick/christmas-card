@@ -152,6 +152,32 @@ leds_render(void)
 }
 
 void
+leds_render_list(const uint8_t *led_list, size_t led_num)
+{
+    /* Use inactive bank */
+    size_t bank = !LEDS_PWM_BANK;
+    size_t led_list_idx, led_idx, led_pl, led_byte, step;
+    uint8_t led_mask, led_not_mask;
+
+    /* For each LED in the list */
+    for (led_list_idx = 0; led_list_idx < led_num; led_list_idx++) {
+        led_idx = led_list[led_list_idx];
+        led_pl = LEDS_BR_PL[LEDS_BR[led_idx]];
+        led_byte = led_idx >> 3;
+        led_mask = 1 << (led_idx & 0x7);
+        led_not_mask = ~led_mask;
+        /* Set step bits under pulse length */
+        for (step = 0; step < led_pl; step++) {
+            LEDS_PWM_BANKS[bank][step][led_byte] |= led_mask;
+        }
+        /* Clear step bits over pulse length */
+        for (; step < ARRAY_SIZE(LEDS_PWM_BANKS[bank]); step++) {
+            LEDS_PWM_BANKS[bank][step][led_byte] &= led_not_mask;
+        }
+    }
+}
+
+void
 leds_swap(void)
 {
     LEDS_PWM_BANK = !LEDS_PWM_BANK;
