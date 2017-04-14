@@ -40,9 +40,7 @@ extern const uint8_t LEDS_TOPPER_LIST[LEDS_TOPPER_NUM];
 /** Number of ball LEDs */
 #define LEDS_BALLS_NUM  21
 
-/**
- * List of indexes of ball LEDs, left-to-right, top-to-bottom.
- */
+/** List of indexes of ball LEDs, left-to-right, top-to-bottom */
 extern const uint8_t LEDS_BALLS_LIST[LEDS_BALLS_NUM];
 
 /**
