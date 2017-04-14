@@ -12,6 +12,7 @@ LDSCRIPTS = \
 MODS = \
     vectors \
     leds \
+    anim_fx \
     anim \
     card
 
