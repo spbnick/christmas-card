@@ -12,6 +12,8 @@
 #include <gpio.h>
 #include <init.h>
 #include <tim.h>
+#include <adc.h>
+#include <prng.h>
 #include <spi.h>
 #include <stk.h>
 #include <misc.h>
@@ -73,6 +75,72 @@ systick_handler(void)
     SYSTICK_STEP++;
 }
 
+/**
+ * Seed the PRNG from successive ADC readings of the internal temperature
+ * sensor.
+ */
+static void
+seed_prng(void)
+{
+    uint32_t seed = 0;
+    size_t i;
+    volatile struct adc *adc = ADC1;
+
+    /* Set adc clock prescaler to produce 12MHz */
+    RCC->cfgr = (RCC->cfgr & (~RCC_CFGR_ADCPRE_MASK)) |
+                (RCC_CFGR_ADCPRE_VAL_PCLK2_DIV6 << RCC_CFGR_ADCPRE_LSB);
+
+    /* Enable clock to ADC1 */
+    RCC->apb2enr |= RCC_APB2ENR_ADC1EN_MASK;
+
+    /* Turn on adc */
+    adc->cr2 |= ADC_CR2_ADON_MASK;
+
+    /*
+     * Wait for at least 1us for adc to stabilize, for two adc cycles before
+     * starting calibration, and for at least 10us for the temperature sensor
+     * to start up.
+     */
+    {
+        volatile unsigned int i;
+        for (i = 0; i < 360; i++);
+    }
+
+    /* Calibrate the adc */
+    adc->cr2 |= ADC_CR2_CAL_MASK;
+    while (adc->cr2 & ADC_CR2_CAL_MASK);
+
+    /* Connect Vref to channel 17, and temp sensor to channel 16 */
+    adc->cr2 |= ADC_CR2_TSVREFE_MASK;
+
+    /* Set channel 16 sampling time to 239.5 adc cycles for precision */
+    adc->smpr1 = (adc->smpr1 & (~ADC_SMPR1_SMP16_MASK)) |
+                 (ADC_SMPRX_SMPX_VAL_239_5C << ADC_SMPR1_SMP16_LSB);
+
+    /* Select channel 16 */
+    adc->sqr3 = (adc->sqr3 & (~ADC_SQR3_SQ1_MASK)) |
+                (16 << ADC_SQR3_SQ1_LSB);
+
+    /* Leave the default of single conversion, right-aligned data */
+
+    /* Until we have all the bytes */
+    for (i = 0; i < 4; i++) {
+        /* Start a conversion */
+        adc->cr2 |= ADC_CR2_ADON_MASK;
+        /* Wait for completion */
+        while (!(adc->sr & ADC_SR_EOC_MASK));
+        /* Read the result */
+        seed <<= 8;
+        seed |= adc->dr & 0xff;
+    }
+
+    /* Disable clock to ADC1 */
+    RCC->apb2enr ^= RCC_APB2ENR_ADC1EN_MASK;
+
+    /* Seed the PRNG */
+    prng_seed(seed);
+}
+
 void
 reset(void)
 {
@@ -123,6 +191,9 @@ reset(void)
 
     /* Initialize LED states */
     leds_init(SPI, GPIO_A, 4);
+
+    /* Seed the global PRNG */
+    seed_prng();
 
     /* Initialize animation state */
     anim_init();
