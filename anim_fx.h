@@ -33,11 +33,11 @@ extern unsigned int anim_fx_stars_blink(bool first, void **pnext_fx);
 /** Fade in the stars to 3/4 brightness, then blink forever */
 extern unsigned int anim_fx_stars_fade_in(bool first, void **pnext_fx);
 
-/** Periodically send a wave through the balls, forever */
-extern unsigned int anim_fx_balls_wave(bool first, void **pnext_fx);
-
 /** Fade in the topper to max brightness, then stop */
 extern unsigned int anim_fx_topper_fade_in(bool first, void **pnext_fx);
+
+/** Periodically send a wave through the balls, forever */
+extern unsigned int anim_fx_balls_wave(bool first, void **pnext_fx);
 
 /** Fade in the balls to 3/4 of max brightness, then send waves */
 extern unsigned int anim_fx_balls_fade_in(bool first, void **pnext_fx);

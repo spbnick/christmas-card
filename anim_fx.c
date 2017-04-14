@@ -150,6 +150,28 @@ anim_fx_stars_fade_in(bool first, void **pnext_fx)
 }
 
 unsigned int
+anim_fx_topper_fade_in(bool first, void **pnext_fx)
+{
+    static uint8_t step;
+    size_t i;
+
+    if (first) {
+        step = 0;
+    }
+
+    for (i = 0; i < ARRAY_SIZE(LEDS_TOPPER_LIST); i++) {
+        LEDS_BR[LEDS_TOPPER_LIST[i]] = step;
+    }
+    step++;
+
+    if (step == LEDS_BR_MAX) {
+        *pnext_fx = anim_fx_stop;
+    }
+
+    return 1000 / LEDS_BR_NUM;
+}
+
+unsigned int
 anim_fx_balls_wave(bool first, void **pnext_fx)
 {
     static ssize_t step;
@@ -194,28 +216,6 @@ anim_fx_balls_wave(bool first, void **pnext_fx)
     }
 
     return delay;
-}
-
-unsigned int
-anim_fx_topper_fade_in(bool first, void **pnext_fx)
-{
-    static uint8_t step;
-    size_t i;
-
-    if (first) {
-        step = 0;
-    }
-
-    for (i = 0; i < ARRAY_SIZE(LEDS_TOPPER_LIST); i++) {
-        LEDS_BR[LEDS_TOPPER_LIST[i]] = step;
-    }
-    step++;
-
-    if (step == LEDS_BR_MAX) {
-        *pnext_fx = anim_fx_stop;
-    }
-
-    return 1000 / LEDS_BR_NUM;
 }
 
 unsigned int
