@@ -9,9 +9,6 @@
 #include <unistd.h>
 #include <limits.h>
 
-/**
- * Stop animation forever.
- */
 unsigned int
 anim_fx_stop(bool first, void **pnext_fx)
 {
@@ -20,9 +17,6 @@ anim_fx_stop(bool first, void **pnext_fx)
     return 3600000;
 }
 
-/**
- * Blink stars forever.
- */
 unsigned int
 anim_fx_stars_blink(bool first, void **pnext_fx)
 {
@@ -132,10 +126,6 @@ anim_fx_stars_blink(bool first, void **pnext_fx)
     return (delay = new_delay);
 }
 
-/**
- * Fade in the stars to 3/4 of max brightness over three seconds,
- * then start blinking.
- */
 unsigned int
 anim_fx_stars_fade_in(bool first, void **pnext_fx)
 {
@@ -206,7 +196,6 @@ anim_fx_balls_wave(bool first, void **pnext_fx)
     return delay;
 }
 
-/** Fade in the topper to max brightness */
 unsigned int
 anim_fx_topper_fade_in(bool first, void **pnext_fx)
 {
@@ -229,7 +218,6 @@ anim_fx_topper_fade_in(bool first, void **pnext_fx)
     return 1000 / LEDS_BR_NUM;
 }
 
-/** Fade in the balls to 3/4 of max brightness */
 unsigned int
 anim_fx_balls_fade_in(bool first, void **pnext_fx)
 {
