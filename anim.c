@@ -4,6 +4,7 @@
 
 #include "anim.h"
 #include "leds.h"
+#include <prng.h>
 #include <misc.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -43,9 +44,127 @@ anim_fx_stop(bool first, void **pnext_fx)
 static unsigned int
 anim_fx_stars_blink(bool first, void **pnext_fx)
 {
-    (void)first;
-    *pnext_fx = anim_fx_stop;
-    return 0;
+    /* Possible state of a dimmed star */
+    enum state {
+        /* Bright, waiting to be dimmed */
+        STATE_WAIT,
+        /* Dimmed, waiting to be restored */
+        STATE_DIM,
+        /* Restored, resting */
+        STATE_REST,
+        /* Number of states, not a valid state */
+        STATE_NUM
+    };
+
+    /* State of a dimmed star */
+    struct star {
+        /* Star LED index */
+        uint8_t         led;
+        /* Current state */
+        enum state      state;
+        /* Delay for each state */
+        unsigned int    state_delay[STATE_NUM];
+    };
+
+    /* State of the stars currently being dimmed */
+    static struct star star_list[4];
+
+    /* Delay since the last invocation */
+    static unsigned int delay;
+
+    size_t i, j;
+    struct star *star;
+    unsigned int new_delay;
+
+    (void)pnext_fx;
+
+    if (first) {
+        delay = 0;
+        for (i = 0; i < ARRAY_SIZE(star_list); i++) {
+            star = &star_list[i];
+            star->state = STATE_REST;
+            for (j = 0; j < ARRAY_SIZE(star->state_delay); j++) {
+                star->state_delay[j] = 0;
+            }
+        }
+    }
+
+    /*
+     * Advance the state of every dimmed star
+     */
+    new_delay = UINT_MAX;
+    for (i = 0; i < ARRAY_SIZE(star_list); i++) {
+        star = &star_list[i];
+        /* If the current state delay is over */
+        if ((star->state_delay[star->state] -= delay) == 0) {
+            /* Switch on the state that finished */
+            switch (star->state) {
+                /* Waiting is over */
+                case STATE_WAIT:
+                    /* Dimmed now */
+                    star->state = STATE_DIM;
+                    break;
+                /* Dimming is over */
+                case STATE_DIM:
+                    /* Resting now */
+                    star->state = STATE_REST;
+                    break;
+                /* Resting is over */
+                case STATE_REST:
+                    /* Pick an LED */
+                    star->led = LEDS_STARS_LIST[
+                                    (prng_next() >> 8) *
+                                    (LEDS_STARS_NUM - 1) /
+                                    (PRNG_MAX >> 8)];
+                    /* Pick the wait time */
+                    star->state_delay[STATE_WAIT] = (prng_next() & 0xf) << 9;
+                    /* Set the dim time */
+                    star->state_delay[STATE_DIM] = 0x200;
+                    /* Calculate the rest time */
+                    star->state_delay[STATE_REST] =
+                        0x2000 - star->state_delay[STATE_WAIT];
+                    /* Waiting now */
+                    star->state = STATE_WAIT;
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (star->state_delay[star->state] < new_delay) {
+            new_delay = star->state_delay[star->state];
+        }
+    }
+
+    /*
+     * Schedule LED updates of all the stars changing next
+     */
+    for (i = 0; i < ARRAY_SIZE(star_list); i++) {
+        star = &star_list[i];
+        /* If the star is changing on the next step */
+        if (star->state_delay[star->state] == new_delay) {
+            /* Switch on the state that is going to be finished */
+            switch (star->state) {
+                /* Waiting will be finished */
+                case STATE_WAIT:
+                    /* Schedule dimming */
+                    LEDS_BR[star->led] = LEDS_BR_MAX / 2;
+                    break;
+                /* Dimming will be finished */
+                case STATE_DIM:
+                    /* Schedule resting */
+                    LEDS_BR[star->led] = LEDS_BR_MAX * 3 / 4;
+                    break;
+                /* Resting will be finished */
+                case STATE_REST:
+                    /* No need to change the LED */
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    return (delay = new_delay);
 }
 
 /**
