@@ -144,7 +144,7 @@ leds_render(void)
             LEDS_PWM_BANKS[bank][step][i] = 0;
         }
         /* Render the step */
-        for (i = 0; i < (ARRAY_SIZE(LEDS_PWM_BANKS[bank][step]) << 3); i++) {
+        for (i = 0; i < ARRAY_SIZE(LEDS_BR); i++) {
             LEDS_PWM_BANKS[bank][step][i >> 3] |=
                 (LEDS_BR_PL[LEDS_BR[i]] > step) << (i & 0x7);
         }
