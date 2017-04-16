@@ -18,7 +18,7 @@ anim_fx_stop(bool first, void **pnext_fx)
 }
 
 unsigned int
-anim_fx_stars_blink(bool first, void **pnext_fx)
+anim_fx_stars_shimmer(bool first, void **pnext_fx)
 {
     /* Possible state of a dimmed star */
     enum state {
@@ -143,7 +143,7 @@ anim_fx_stars_fade_in(bool first, void **pnext_fx)
     step++;
 
     if (step >= (LEDS_BR_NUM * 3 / 4)) {
-        *pnext_fx = anim_fx_stars_blink;
+        *pnext_fx = anim_fx_stars_shimmer;
     }
 
     return 3000 * 4 / (LEDS_BR_NUM * 3);
