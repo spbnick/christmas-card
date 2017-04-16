@@ -174,67 +174,42 @@ anim_fx_topper_fade_in(bool first, void **pnext_fx)
 unsigned int
 anim_fx_balls_wave(bool first, void **pnext_fx)
 {
-    static ssize_t step;
-    ssize_t i, j, k;
-    uint8_t br;
-    unsigned int delay;
-
-    (void)pnext_fx;
-
-    if (first) {
-        step = -2;
-    }
-
-    /* For each line of balls */
-    for (i = 0; i < (ssize_t)ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST); i++) {
-        switch (i - step) {
-            case 0:
-                br = LEDS_BR_MAX;
-                break;
-            case -1:
-            case 1:
-                br = LEDS_BR_MAX * 5 / 6;
-                break;
-            default:
-                br = LEDS_BR_MAX * 3 / 4;
-                break;
-        }
-        for (j = 0;
-             (k = LEDS_BALLS_SWNE_LINE_LIST[i][j]) != LEDS_IDX_INVALID;
-             j++) {
-            LEDS_BR[k] = br;
-        }
-    }
-
-    delay = (step == -2)
-                ? 2000
-                : (1000 / (ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST) + 4));
-
-    step++;
-    if (step >= (ssize_t)ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST) + 2) {
-        step = -2;
-    }
-
-    return delay;
-}
-
-unsigned int
-anim_fx_balls_fade_in(bool first, void **pnext_fx)
-{
-    static unsigned int step;
-    size_t i, j, k;
-    uint8_t br;
+    /*
+     * Generated with
+     * perl -e 'use Math::Trig;
+     *          my $n=64;
+     *          for (my $i=0; $i < $n; $i++) {
+     *              printf("%.0f, ", sin(2*pi*$i/$n-pi/2) * 16 + 47);
+     *          };
+     *          print("\n")'
+     */
+    static const uint8_t wave[] = {
+        31, 31, 31, 32, 32, 33, 34, 35, 36, 37, 38, 39, 41, 42, 44, 45,
+        47, 49, 50, 52, 53, 55, 56, 57, 58, 59, 60, 61, 62, 62, 63, 63,
+        63, 63, 63, 62, 62, 61, 60, 59, 58, 57, 56, 55, 53, 52, 50, 49,
+        47, 45, 44, 42, 41, 39, 38, 37, 36, 35, 34, 33, 32, 32, 31, 31,
+    };
+    static size_t step;
+    size_t i, j, k, w;
+    unsigned int br;
 
     if (first) {
         step = 0;
     }
 
+    /* For each line of balls */
     for (i = 0; i < ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST); i++) {
-        br = (step > i)
-                    ? ((step < i + 4)
-                            ? ((step - i) * (LEDS_BR_MAX * 3 )) >> 4
-                            : (LEDS_BR_MAX * 3 / 4))
-                    : 0;
+        w = step + (i << 2);
+        /* Calculate brightness */
+        br = wave[w & (ARRAY_SIZE(wave) - 1)];
+        /* If fading in */
+        if ((w & 0x700) == 0) {
+            br = (br * ((w >> 2) & 0x3f)) >> 6;
+        /* Else, if fading out */
+        } else if ((w & 0x700) == 0x700) {
+            br = (br * (0x40 - ((w >> 2) & 0x3f))) >> 6;
+        }
+        /* For each ball on the line */
         for (j = 0;
              (k = LEDS_BALLS_SWNE_LINE_LIST[i][j]) != LEDS_IDX_INVALID;
              j++) {
@@ -244,9 +219,9 @@ anim_fx_balls_fade_in(bool first, void **pnext_fx)
 
     step++;
 
-    if (step >= ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST) + 4) {
-        *pnext_fx = anim_fx_balls_wave;
+    if (step == 0x800) {
+        *pnext_fx = anim_fx_stop;
     }
 
-    return 1500 / (ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST) + 4);
+    return 50;
 }
