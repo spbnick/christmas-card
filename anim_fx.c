@@ -220,8 +220,161 @@ anim_fx_balls_wave(bool first, void **pnext_fx)
     step++;
 
     if (step == 0x800) {
-        *pnext_fx = anim_fx_stop;
+        *pnext_fx = anim_fx_balls_random;
     }
 
     return 50;
+}
+
+unsigned int
+anim_fx_balls_glitter(bool first, void **pnext_fx)
+{
+    /* Possible state of a ball */
+    enum state {
+        /* Off */
+        STATE_OFF,
+        /* On */
+        STATE_ON,
+        /* Number of states, not a valid state */
+        STATE_NUM
+    };
+
+    /* State of a bal */
+    struct ball {
+        /* Current state */
+        enum state      state;
+        /* Delay for each state */
+        unsigned int    state_delay[STATE_NUM];
+    };
+
+    /* State of each ball this cycle */
+    static struct ball ball_list[LEDS_BALLS_NUM];
+    /* Delay since the last invocation */
+    static unsigned int delay;
+
+    static unsigned int step;
+
+    unsigned int new_delay;
+    struct ball *ball;
+    size_t i, j;
+    uint8_t br;
+
+    if (first) {
+        step = 0;
+        delay = 0;
+        for (i = 0; i < ARRAY_SIZE(ball_list); i++) {
+            ball = &ball_list[i];
+            ball->state = STATE_ON;
+            for (j = 0; j < ARRAY_SIZE(ball->state_delay); j++) {
+                ball->state_delay[j] = 0;
+            }
+        }
+    }
+
+    /* Calculate "on" brightness for this step */
+    if ((step & 0xe00) == 0) {
+        br = (step * LEDS_BR_NUM) >> 9;
+    } else if ((step & 0xe00) == 0xe00) {
+        br = ((0x1ff - (step & 0x1ff)) * LEDS_BR_NUM) >> 9;
+    } else {
+        br = LEDS_BR_MAX;
+    }
+
+    /*
+     * Advance the state of every blinking ball
+     */
+    new_delay = UINT_MAX;
+    for (i = 0; i < ARRAY_SIZE(ball_list); i++) {
+        ball = &ball_list[i];
+        /* If the current state delay is over */
+        if ((ball->state_delay[ball->state] -= delay) == 0) {
+            /* If cycle is over */
+            if (ball->state == STATE_ON) {
+                ball->state_delay[STATE_OFF] =
+                    ((prng_next() & 0xffff) * 291) >> 16;
+                ball->state_delay[STATE_ON] = 10;
+                /* Off now */
+                ball->state = STATE_OFF;
+                /* A step is complete */
+                step++;
+            } else {
+                ball->state++;
+            }
+        }
+        if (ball->state_delay[ball->state] < new_delay) {
+            new_delay = ball->state_delay[ball->state];
+        }
+    }
+
+    /*
+     * Schedule LED updates of all the balls changing next
+     */
+    for (i = 0; i < ARRAY_SIZE(ball_list); i++) {
+        ball = &ball_list[i];
+        /* If the ball is changing on the next step */
+        if (ball->state_delay[ball->state] == new_delay) {
+            /* Schedule brightness change */
+            LEDS_BR[LEDS_BALLS_LIST[i]] =
+                (ball->state == STATE_OFF) ? br : 0;
+        }
+    }
+
+    if (step == 0xf00) {
+        *pnext_fx = anim_fx_balls_random;
+    }
+
+    /* Call us for the next change */
+    return (delay = new_delay);
+}
+
+unsigned int
+anim_fx_balls_cycle_colors(bool first, void **pnext_fx)
+{
+    static unsigned int step;
+    static enum leds_balls_color on_color;
+    enum leds_balls_color color;
+    size_t i;
+
+    (void)pnext_fx;
+
+    if (first) {
+        step = 0;
+        on_color = 0;
+    }
+
+    for (color = 0; color < ARRAY_SIZE(LEDS_BALLS_COLOR_LIST); color++) {
+        for (i = 0; i < ARRAY_SIZE(LEDS_BALLS_COLOR_LIST[color]); i++) {
+            LEDS_BR[LEDS_BALLS_COLOR_LIST[color][i]] =
+                (color == on_color && step < 64) ? LEDS_BR_MAX : 0;
+        }
+    }
+
+    on_color++;
+    if (on_color >= ARRAY_SIZE(LEDS_BALLS_COLOR_LIST)) {
+        on_color = 0;
+    }
+
+    step++;
+    if (step > 64) {
+        *pnext_fx = anim_fx_balls_random;
+    }
+
+    return 750;
+}
+
+unsigned int
+anim_fx_balls_random(bool first, void **pnext_fx)
+{
+    static const anim_fx_fn pool[] = {
+        anim_fx_balls_wave,
+        anim_fx_balls_glitter,
+        anim_fx_balls_cycle_colors,
+    };
+
+    (void)first;
+    (void)pnext_fx;
+
+    *pnext_fx = pool[prng_next() % ARRAY_SIZE(pool)];
+
+    return 0;
 }
