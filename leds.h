@@ -59,6 +59,22 @@ extern const uint8_t LEDS_BALLS_LIST[LEDS_BALLS_NUM];
 extern const uint8_t LEDS_BALLS_SWNE_LINE_LIST[LEDS_BALLS_SWNE_LINE_NUM]
                                               [LEDS_BALLS_SWNE_LINE_LEN];
 
+/** Ball LED colors */
+enum leds_balls_color {
+    LEDS_BALLS_COLOR_RED,
+    LEDS_BALLS_COLOR_GREEN,
+    LEDS_BALLS_COLOR_YELLOW,
+    /** Number of ball colors (not a valid color) */
+    LEDS_BALLS_COLOR_NUM
+};
+
+/** Number of ball LEDs per each color */
+#define LEDS_BALLS_COLOR_LEN    7
+
+/** List of ball LED indexes by color, left to right, top to bottom */
+extern const uint8_t LEDS_BALLS_COLOR_LIST[LEDS_BALLS_COLOR_NUM]
+                                          [LEDS_BALLS_COLOR_LEN];
+
 /**
  * Initialize LEDs module.
  *

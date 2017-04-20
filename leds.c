@@ -97,6 +97,13 @@ const uint8_t LEDS_BALLS_SWNE_LINE_LIST[LEDS_BALLS_SWNE_LINE_NUM]
 #undef LINE
 };
 
+const uint8_t LEDS_BALLS_COLOR_LIST[LEDS_BALLS_COLOR_NUM]
+                                   [LEDS_BALLS_COLOR_LEN] = {
+    [LEDS_BALLS_COLOR_RED]      = {6, 5, 4, 3, 2, 1, 0},
+    [LEDS_BALLS_COLOR_GREEN]    = {13, 14, 12, 11, 10, 9, 8},
+    [LEDS_BALLS_COLOR_YELLOW]   = {33, 34, 36, 37, 39, 38, 35},
+};
+
 void
 leds_init(volatile struct spi *spi,
           volatile struct gpio *le_gpio,
