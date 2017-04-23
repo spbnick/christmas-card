@@ -331,35 +331,54 @@ unsigned int
 anim_fx_balls_cycle_colors(bool first, void **pnext_fx)
 {
     static unsigned int step;
-    static enum leds_balls_color on_color;
+    static enum leds_balls_color prev_color;
+    static enum leds_balls_color cur_color;
+    static unsigned int hue;
     enum leds_balls_color color;
+    uint8_t br;
     size_t i;
 
     (void)pnext_fx;
 
     if (first) {
         step = 0;
-        on_color = 0;
+        prev_color = LEDS_BALLS_COLOR_NUM;
+        cur_color = 0;
+        hue = 0;
+    }
+
+    if (step == 12) {
+        cur_color = LEDS_BALLS_COLOR_NUM;
     }
 
     for (color = 0; color < ARRAY_SIZE(LEDS_BALLS_COLOR_LIST); color++) {
+        if (color == cur_color) {
+            br = ((hue + 1) * LEDS_BR_MAX) >> 3 ;
+        } else if (color == prev_color) {
+            br = ((7 - hue) * LEDS_BR_MAX) >> 3;
+        } else {
+            br = 0;
+        }
         for (i = 0; i < ARRAY_SIZE(LEDS_BALLS_COLOR_LIST[color]); i++) {
-            LEDS_BR[LEDS_BALLS_COLOR_LIST[color][i]] =
-                (color == on_color && step < 64) ? LEDS_BR_MAX : 0;
+            LEDS_BR[LEDS_BALLS_COLOR_LIST[color][i]] = br;
         }
     }
 
-    on_color++;
-    if (on_color >= ARRAY_SIZE(LEDS_BALLS_COLOR_LIST)) {
-        on_color = 0;
+    hue++;
+    if (hue >= 8) {
+        hue = 0;
+        prev_color = cur_color;
+        cur_color++;
+        if (cur_color >= LEDS_BALLS_COLOR_NUM) {
+            cur_color = 0;
+            step++;
+            if (step > 12) {
+                *pnext_fx = anim_fx_balls_random;
+            }
+        }
     }
 
-    step++;
-    if (step > 64) {
-        *pnext_fx = anim_fx_balls_random;
-    }
-
-    return 750;
+    return hue == 1 ? 1100 : 50;
 }
 
 unsigned int
