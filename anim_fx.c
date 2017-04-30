@@ -381,19 +381,32 @@ anim_fx_balls_cycle_colors(bool first, void **pnext_fx)
     return hue == 1 ? 1100 : 50;
 }
 
+/** Pool of the balls effect-stepping functions to choose from randomly */
+static const anim_fx_fn ANIM_FX_BALLS_RANDOM_POOL[] = {
+    anim_fx_balls_wave,
+    anim_fx_balls_glitter,
+    anim_fx_balls_cycle_colors,
+};
+
+/** Index of the balls effect-stepping function chosen last */
+static size_t ANIM_FX_BALLS_RANDOM_LAST =
+                    ARRAY_SIZE(ANIM_FX_BALLS_RANDOM_POOL);
+
 unsigned int
 anim_fx_balls_random(bool first, void **pnext_fx)
 {
-    static const anim_fx_fn pool[] = {
-        anim_fx_balls_wave,
-        anim_fx_balls_glitter,
-        anim_fx_balls_cycle_colors,
-    };
+    size_t i;
 
     (void)first;
     (void)pnext_fx;
 
-    *pnext_fx = pool[prng_next() % ARRAY_SIZE(pool)];
+    i = prng_next() % ARRAY_SIZE(ANIM_FX_BALLS_RANDOM_POOL);
+    if (i == ANIM_FX_BALLS_RANDOM_LAST) {
+        i = (i + 1) % ARRAY_SIZE(ANIM_FX_BALLS_RANDOM_POOL);
+    }
+
+    *pnext_fx = ANIM_FX_BALLS_RANDOM_POOL[i];
+    ANIM_FX_BALLS_RANDOM_LAST = i;
 
     return 0;
 }
