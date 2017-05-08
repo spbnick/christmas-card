@@ -141,8 +141,8 @@ seed_prng(void)
     prng_seed(seed);
 }
 
-void
-reset(void)
+int
+main(void)
 {
     /* Basic init */
     init();

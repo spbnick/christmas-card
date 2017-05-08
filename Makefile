@@ -4,13 +4,8 @@ TARGET_CFLAGS = -mcpu=cortex-m3 -mthumb
 COMMON_CFLAGS = $(TARGET_CFLAGS) -Wall -Wextra -Werror -g3
 LIBS = -lstammer
 
-LDSCRIPTS = \
-    memory.ld   \
-    flash.ld
-
 # In order of symbol resolution
 MODS = \
-    vectors \
     leds \
     anim_fx \
     anim \
@@ -35,7 +30,7 @@ all: card.bin
 	$(CCPFX)objcopy -O binary $< $@
 
 card.elf: $(OBJS) $(LDSCRIPTS)
-	$(CCPFX)ld -T flash.ld $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(CCPFX)ld $(LDFLAGS) -T libstammer.ld -o $@ $(OBJS) $(LIBS)
 
 clean:
 	rm -f $(OBJS)
