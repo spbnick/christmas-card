@@ -22,19 +22,19 @@
 #include <stdbool.h>
 
 /* SPI peripheral to use to talk to LEDs */
-static volatile struct spi *SPI;
+static volatile struct spi *SPI = SPI1;
 
 /* Systick handler step */
-static volatile unsigned int SYSTICK_STEP;
+static volatile unsigned int SYSTICK_STEP = 0;
 /* True if systick handler must swap LED banks */
-static volatile bool SYSTICK_SWAP_WAIT;
+static volatile bool SYSTICK_SWAP_WAIT = false;
 /*
  * Value of SYSTICK_STEP at (or after) which systick handler must swap LED
  * banks. Rounded to PWM step zero.
  */
-static volatile unsigned int SYSTICK_SWAP_NEXT;
+static volatile unsigned int SYSTICK_SWAP_NEXT = 0;
 /* Last value of SYSTICK_STEP at which the LED banks were swapped */
-static volatile unsigned int SYSTICK_SWAP_LAST;
+static volatile unsigned int SYSTICK_SWAP_LAST = 0;
 
 /* The maxmimum lag for swap step time to be considered not overrun */
 #define SYSTICK_SWAP_LAG    ((unsigned int)1 << 31)
@@ -147,9 +147,6 @@ main(void)
     /* Basic init */
     init();
 
-    /* Use the first SPI peripheral */
-    SPI = SPI1;
-
     /*
      * Enable clocks
      */
@@ -197,12 +194,6 @@ main(void)
 
     /* Initialize animation state */
     anim_init();
-
-    /* Initialize the systick handler */
-    SYSTICK_STEP = 0;
-    SYSTICK_SWAP_WAIT = false;
-    SYSTICK_SWAP_LAST = 0;
-    SYSTICK_SWAP_NEXT = 0;
 
     /*
      * Set SysTick timer to fire the interrupt at frequency 375 * 64 * 2 =

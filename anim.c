@@ -31,35 +31,36 @@ struct anim_thread {
 };
 
 /** List of thread states */
-struct anim_thread  ANIM_THREADS[3];
-/** Minimum delay until the next animation step across all threads */
-unsigned int ANIM_DELAY_MIN;
-
-void
-anim_init(void)
-{
-    ANIM_THREADS[0] = (struct anim_thread){
+static struct anim_thread  ANIM_THREADS[] = {
+    {
         .led_list = LEDS_STARS_LIST,
         .led_num = LEDS_STARS_NUM,
         .fx = anim_fx_stars_fade_in,
         .first = true,
         .delay = 0,
-    };
-    ANIM_THREADS[1] = (struct anim_thread){
+    },
+    {
         .led_list = LEDS_TOPPER_LIST,
         .led_num = LEDS_TOPPER_NUM,
         .fx = anim_fx_topper_fade_in,
         .first = true,
         .delay = 1000,
-    };
-    ANIM_THREADS[2] = (struct anim_thread){
+    },
+    {
         .led_list = LEDS_BALLS_LIST,
         .led_num = LEDS_BALLS_NUM,
         .fx = anim_fx_balls_random,
         .first = true,
         .delay = 1500,
-    };
-    ANIM_DELAY_MIN = 0;
+    },
+};
+
+/** Minimum delay until the next animation step across all threads */
+static unsigned int ANIM_DELAY_MIN = 0;
+
+void
+anim_init(void)
+{
 }
 
 unsigned int

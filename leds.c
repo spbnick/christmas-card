@@ -62,13 +62,14 @@ static const uint8_t LEDS_BR_PL[LEDS_BR_NUM] = {
 };
 
 /** Brightness value of each LED */
-uint8_t LEDS_BR[LEDS_NUM];
+uint8_t LEDS_BR[LEDS_NUM] = {0, };
 
 /** State of each LED for each PWM step, in two banks */
-static volatile uint8_t LEDS_PWM_BANKS[2][LEDS_BR_NUM][LEDS_NUM / 8];
+static volatile uint8_t LEDS_PWM_BANKS[2][LEDS_BR_NUM][LEDS_NUM / 8] =
+                                                                {{{0, }}};
 
 /** Index of the PWM LED state bank currently being output */
-static volatile size_t LEDS_PWM_BANK;
+static volatile size_t LEDS_PWM_BANK = 0;
 
 const uint8_t LEDS_STARS_LIST[LEDS_STARS_NUM] = {
     19, 17, 16, 27, 18, 26, 25, 31, 15,
@@ -109,31 +110,10 @@ leds_init(volatile struct spi *spi,
           volatile struct gpio *le_gpio,
           unsigned int le_pin)
 {
-    size_t bank;
-    uint8_t step;
-    size_t i;
-
     /* Store params */
     LEDS_SPI = spi;
     LEDS_LE_GPIO = le_gpio;
     LEDS_LE_PIN = le_pin;
-
-    /* Zero LED brightness */
-    for (i = 0; i < ARRAY_SIZE(LEDS_BR); i++) {
-        LEDS_BR[i] = 0;
-    }
-
-    /* Zero all PWM banks */
-    for (bank = 0; bank < ARRAY_SIZE(LEDS_PWM_BANKS); bank++) {
-        for (step = 0; step < ARRAY_SIZE(LEDS_PWM_BANKS[bank]); step++) {
-            for (i = 0; i < ARRAY_SIZE(LEDS_PWM_BANKS[bank][step]); i++) {
-                LEDS_PWM_BANKS[bank][step][i] = 0;
-            }
-        }
-    }
-
-    /* Set bank 0 active */
-    LEDS_PWM_BANK = 0;
 }
 
 void
