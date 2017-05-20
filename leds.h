@@ -56,7 +56,7 @@ extern const uint8_t LEDS_BALLS_LIST[LEDS_BALLS_NUM];
  * List of southwest-northeast diagonal lines of ball LEDs, top-to-bottom.
  * Each line contains LED indexes terminated by the invalid LED index.
  */
-extern const uint8_t LEDS_BALLS_SWNE_LINE_LIST[LEDS_BALLS_SWNE_LINE_NUM]
+extern const uint8_t LEDS_BALLS_SWNE_LINE_LIST[LEDS_BALLS_SWNE_LINE_NUM] \
                                               [LEDS_BALLS_SWNE_LINE_LEN];
 
 /** Ball LED colors */
