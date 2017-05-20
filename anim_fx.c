@@ -172,6 +172,69 @@ anim_fx_topper_fade_in(bool first, void **pnext_fx)
 }
 
 unsigned int
+anim_fx_balls_fade_in(bool first, void **pnext_fx)
+{
+    static enum {
+        FADE_IN,
+        WAIT,
+        FADE_OUT
+    } stage;
+    static int step;
+    static const uint8_t br_steps[] = {
+        0,
+        LEDS_BR_MAX / 4,
+        LEDS_BR_MAX * 2 / 4,
+        LEDS_BR_MAX * 3 / 4,
+        LEDS_BR_MAX
+    };
+    int idx;
+    int br_idx;
+    int i;
+    int j;
+
+    if (first) {
+        stage = FADE_IN;
+        step = 0;
+    }
+
+    if (stage == WAIT) {
+        stage = FADE_OUT;
+        return 10000;
+    }
+
+    idx = 0;
+    for (i = (int)ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST) - 1; i >= 0; i--) {
+        for (j = 0;
+             j < (int)ARRAY_SIZE(LEDS_BALLS_SWNE_LINE_LIST[i]) &&
+             LEDS_BALLS_SWNE_LINE_LIST[i][j] != LEDS_IDX_INVALID;
+             j++) {
+            br_idx = step - idx;
+            if (br_idx < 0) {
+                br_idx = 0;
+            } else if (br_idx >= (int)ARRAY_SIZE(br_steps)) {
+                br_idx = ARRAY_SIZE(br_steps) - 1;
+            }
+            LEDS_BR[LEDS_BALLS_SWNE_LINE_LIST[i][j]] = br_steps[br_idx];
+            idx++;
+        }
+    }
+
+    if (stage == FADE_IN) {
+        step++;
+        if (step == LEDS_BALLS_NUM + ARRAY_SIZE(br_steps) - 1) {
+            stage = WAIT;
+        }
+    } else if (stage == FADE_OUT) {
+        step--;
+        if (step == 0) {
+            *pnext_fx = anim_fx_balls_random;
+        }
+    }
+
+    return 1500 / (LEDS_BALLS_NUM + ARRAY_SIZE(br_steps) - 1);
+}
+
+unsigned int
 anim_fx_balls_wave(bool first, void **pnext_fx)
 {
     /*

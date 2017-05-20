@@ -36,6 +36,12 @@ extern unsigned int anim_fx_stars_fade_in(bool first, void **pnext_fx);
 /** Fade in the topper to max brightness, then stop */
 extern unsigned int anim_fx_topper_fade_in(bool first, void **pnext_fx);
 
+/**
+ * Fade in the balls over 1.5s, wait 10 seconds, then fade out over 1.5s,
+ * and run random balls effects forever.
+ */
+extern unsigned int anim_fx_balls_fade_in_and_out(bool first, void **pnext_fx);
+
 /** Send waves through the balls, then run random balls effects forever */
 extern unsigned int anim_fx_balls_wave(bool first, void **pnext_fx);
 
