@@ -1,7 +1,9 @@
 /*
  * LEDs control
- *
- * Rough map of the LEDs with bit numbers
+ */
+
+/*
+ * Rough map of the LEDs with bit numbers and colors
  *
  *  19W                                        16W
  *                     17W        / \                       27W
