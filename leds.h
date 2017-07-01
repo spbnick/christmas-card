@@ -59,6 +59,22 @@ extern const uint8_t LEDS_BALLS_LIST[LEDS_BALLS_NUM];
 extern const uint8_t LEDS_BALLS_SWNE_LINE_LIST[LEDS_BALLS_SWNE_LINE_NUM] \
                                               [LEDS_BALLS_SWNE_LINE_LEN];
 
+/** Number of ball LED "rows" */
+#define LEDS_BALLS_ROW_NUM  11
+
+/** Number of ball LED "columns" */
+#define LEDS_BALLS_COL_NUM  5
+
+/**
+ * List of ball LED "rows" (top to bottom), with each row being a map of ball
+ * LEDs belonging to a particular "column". If a "column" doesn't have an LED
+ * at a specific level, then the map contains LEDS_IDX_INVALID at the
+ * corresponding "column" index. Otherwise it contains an index of ball LED
+ * belonging to the "column".
+ */
+extern const uint8_t LEDS_BALLS_ROW_LIST[LEDS_BALLS_ROW_NUM] \
+                                        [LEDS_BALLS_COL_NUM];
+
 /** Ball LED colors */
 enum leds_balls_color {
     LEDS_BALLS_COLOR_RED,

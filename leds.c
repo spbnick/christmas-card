@@ -36,8 +36,38 @@
  *
  *                                         08G
  *                   00R        35Y                   01R
- *
  */
+
+/*
+ * Map of the ball LED "columns"
+ *
+ *                   06R
+ *                     :
+ *                      :
+ *            33Y        :
+ *              :         :
+ *               :       13G
+ *                :       :
+ *          05R    :      :
+ *           :      :      :
+ *           :       :     :
+ *            :       34Y  :
+ *            :       :     :  14G
+ *           12G      :     :   :
+ *            :      :     04R   :
+ *      03R   :      :      :     :
+ *       :    :      :       :     :
+ *      :     :     36Y       :   11G
+ *      :     :       :       :
+ *     :     10G       :     37Y
+ *     :       \        :      \
+ *     :        \      02R      \
+ *    38Y        09G     \       39Y
+ *     :          :       \         \
+ *    :          :         08G       \
+ *   00R        35Y                   01R
+ */
+
 #include "leds.h"
 #include <misc.h>
 #include <stdbool.h>
@@ -98,6 +128,22 @@ const uint8_t LEDS_BALLS_SWNE_LINE_LIST[LEDS_BALLS_SWNE_LINE_NUM]
     LINE(35, 8, 39),
     LINE(1),
 #undef LINE
+};
+
+const uint8_t LEDS_BALLS_ROW_LIST[LEDS_BALLS_ROW_NUM][LEDS_BALLS_COL_NUM] = {
+#define X LEDS_IDX_INVALID
+    {   X,  X,  X,  6,  X   },
+    {   X,  X, 33,  X,  X   },
+    {   X,  X,  X, 13,  X   },
+    {   X,  5,  X,  X,  X   },
+    {   X,  X, 34,  X, 14   },
+    {   X, 12,  X,  4,  X   },
+    {   3,  X, 36,  X, 11   },
+    {   X, 10,  X, 37,  X   },
+    {   X,  X,  2,  X,  X   },
+    {  38,  9,  X, 39,  X   },
+    {   0, 35,  8,  1,  X   },
+#undef X
 };
 
 const uint8_t LEDS_BALLS_COLOR_LIST[LEDS_BALLS_COLOR_NUM]
