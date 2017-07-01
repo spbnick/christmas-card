@@ -444,11 +444,145 @@ anim_fx_balls_cycle_colors(bool first, void **pnext_fx)
     return hue == 1 ? 1100 : 50;
 }
 
+unsigned int
+anim_fx_balls_snow(bool first, void **pnext_fx)
+{
+    /* True if filling, false if emptying */
+    static bool fill;
+    /* The current row being filled/emtpied, destination/origin row */
+    static uint8_t row;
+    /* Current row column status */
+    static bool idle_cols[LEDS_BALLS_COL_NUM];
+    /* Number of unfilled/unemptied columns at the current row */
+    static uint8_t idle_cols_num;
+    /* Current falling ball column */
+    static uint8_t ball_col;
+    /* Previous falling ball row */
+    static uint8_t prev_ball_row;
+    /* Current falling ball row */
+    static uint8_t ball_row;
+    /* Ball brightness */
+    static uint8_t ball_br;
+
+    size_t i;
+
+    if (first) {
+        /* We're filling */
+        fill = true;
+        /* Below the bottom row */
+        row = LEDS_BALLS_ROW_NUM;
+        /* No unfilled columns remaining in the row */
+        idle_cols_num = 0;
+        /* Ball in the below-the-bottom row */
+        ball_row = row;
+        /* Ball finished lighting */
+        ball_br = LEDS_BR_MAX;
+    }
+
+    /* Else, if the ball in current position is lighted fully */
+    if (ball_br >= LEDS_BR_MAX) {
+        /* Reset ball brightness */
+        ball_br = 0;
+        /* Current row becomes previous row */
+        prev_ball_row = ball_row;
+
+        /* If the ball is in flight still */
+        if (fill ? (ball_row < row) : (ball_row <= LEDS_BALLS_ROW_NUM)) {
+            /* Move to the next row */
+            ball_row++;
+        /* Else */
+        } else {
+            /* If there are no unfilled columns left */
+            if (idle_cols_num == 0) {
+                /* If we are at the top */
+                if (row == 0) {
+                    if (fill) {
+                        /* Switch to emptying */
+                        fill = false;
+                        /* Emptying row below the bottom */
+                        row = LEDS_BALLS_ROW_NUM + 1;
+                        /* No unemptied columns left */
+                        idle_cols_num = 0;
+                        /* Ball is below the bottom */
+                        ball_row = row;
+                        /* Completely lighted */
+                        ball_br = LEDS_BR_MAX;
+                        /* Wait before emptying */
+                        return 7000;
+                    } else {
+                        /* Run random effects forever */
+                        *pnext_fx = anim_fx_balls_random;
+                        /* Wait to allow satisfaction settle a little */
+                        return 3000;
+                    }
+                }
+                /* Move up a row */
+                row--;
+                /* Count and mark available columns */
+                for (i = 0; i < LEDS_BALLS_COL_NUM; i++) {
+                    idle_cols[i] = LEDS_BALLS_ROW_LIST[row][i] != LEDS_IDX_INVALID;
+                    if (idle_cols[i]) {
+                        idle_cols_num++;
+                    }
+                }
+            }
+            /*
+             * At the current fill/emptying row,
+             * choose a column from unfilled/unemptied
+             */
+            i = ((prng_next() & 0xffff) * (uint32_t)idle_cols_num) >> 16;
+            for (ball_col = 0; ball_col < LEDS_BALLS_COL_NUM; ball_col++) {
+                if (idle_cols[ball_col]) {
+                    if (i == 0) {
+                        break;
+                    } else {
+                        i--;
+                    }
+                }
+            }
+            idle_cols[ball_col] = false;
+            idle_cols_num--;
+            if (fill) {
+                ball_row = 0;
+            } else {
+                prev_ball_row = row;
+                ball_row = row + 1;
+            }
+        }
+
+        /* Find the row where column is present */
+        for (; (fill ? (ball_row < row) : (ball_row < LEDS_BALLS_ROW_NUM)) &&
+               LEDS_BALLS_ROW_LIST[ball_row][ball_col] == LEDS_IDX_INVALID;
+             ball_row++);
+    }
+
+    /* Increase ball brightness */
+    ball_br += LEDS_BR_NUM / 8;
+    if (ball_br > LEDS_BR_MAX) {
+        ball_br = LEDS_BR_MAX;
+    }
+
+    /* Update brightness of the previous ball, if any */
+    if (fill ? (prev_ball_row < ball_row)
+             : (prev_ball_row < LEDS_BALLS_ROW_NUM)) {
+        LEDS_BR[LEDS_BALLS_ROW_LIST[prev_ball_row][ball_col]] =
+            LEDS_BR_MAX - ball_br;
+    }
+
+    /* Update brightness of the current ball, if any */
+    if (ball_row < LEDS_BALLS_ROW_NUM) {
+        LEDS_BR[LEDS_BALLS_ROW_LIST[ball_row][ball_col]] = ball_br;
+    }
+
+    return 75;
+}
+
 /** Pool of the balls effect-stepping functions to choose from randomly */
 static const anim_fx_fn ANIM_FX_BALLS_RANDOM_POOL[] = {
     anim_fx_balls_wave,
     anim_fx_balls_glitter,
     anim_fx_balls_cycle_colors,
+    anim_fx_balls_snow,
 };
 
 /** Index of the balls effect-stepping function chosen last */

@@ -51,6 +51,9 @@ extern unsigned int anim_fx_balls_glitter(bool first, void **pnext_fx);
 /** Cycle ball colors, then run random balls effects forever */
 extern unsigned int anim_fx_balls_cycle_colors(bool first, void **pnext_fx);
 
+/** Snow balls, then run random balls effects forever */
+extern unsigned int anim_fx_balls_snow(bool first, void **pnext_fx);
+
 /** Run random balls effects forever */
 extern unsigned int anim_fx_balls_random(bool first, void **pnext_fx);
 
