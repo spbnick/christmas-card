@@ -172,7 +172,7 @@ anim_fx_topper_fade_in(bool first, void **pnext_fx)
 }
 
 unsigned int
-anim_fx_balls_fade_in(bool first, void **pnext_fx)
+anim_fx_balls_fade_in_and_out(bool first, void **pnext_fx)
 {
     static enum {
         FADE_IN,

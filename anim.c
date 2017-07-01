@@ -49,7 +49,7 @@ static struct anim_thread  ANIM_THREADS[] = {
     {
         .led_list = LEDS_BALLS_LIST,
         .led_num = LEDS_BALLS_NUM,
-        .fx = anim_fx_balls_fade_in,
+        .fx = anim_fx_balls_fade_in_and_out,
         .first = true,
         .delay = 1500,
     },
