@@ -55,8 +55,8 @@ static struct anim_thread  ANIM_THREADS[] = {
     },
 };
 
-/** Minimum delay until the next animation step across all threads */
-static unsigned int ANIM_DELAY_MIN = 0;
+/** Delay until the next animation step across all threads */
+static unsigned int ANIM_DELAY = 0;
 
 void
 anim_init(void)
@@ -67,46 +67,37 @@ unsigned int
 anim_step(void)
 {
     size_t i;
-    unsigned int delay;
+    unsigned int delay_next;
     struct anim_thread *thread;
     anim_fx_fn fx;
 
-    /* Subtract time passed since the last step */
+    /* Advance each thread and calculate next delay */
+    delay_next = UINT_MAX;
     for (i = 0; i < ARRAY_SIZE(ANIM_THREADS); i++) {
-        ANIM_THREADS[i].delay -= ANIM_DELAY_MIN;
-    }
-
-    /* While we have threads to run immediately */
-    do {
-        ANIM_DELAY_MIN = UINT_MAX;
-        /* Advance each thread */
-        for (i = 0; i < ARRAY_SIZE(ANIM_THREADS); i++) {
-            thread = &ANIM_THREADS[i];
-            delay = thread->delay;
-            /* If the previous thread step is over */
-            if (delay == 0) {
-                /* Render the previous state into the swapped buffer */
-                leds_render_list(thread->led_list, thread->led_num);
-                /* Calculate next step */
-                fx = thread->fx;
-                delay = fx(thread->first, (void **)&fx);
-                thread->delay = delay;
-                thread->first = thread->fx != fx;
-                thread->fx = fx;
-            }
-            if (delay < ANIM_DELAY_MIN) {
-                ANIM_DELAY_MIN = delay;
-            }
+        thread = &ANIM_THREADS[i];
+        thread->delay -= ANIM_DELAY;
+        /* If the previous thread step is over */
+        if (thread->delay == 0) {
+            /* Render the previous state into the swapped buffer */
+            leds_render_list(thread->led_list, thread->led_num);
+            /* Calculate next step */
+            fx = thread->fx;
+            thread->delay = fx(thread->first, (void **)&fx);
+            thread->first = thread->fx != fx;
+            thread->fx = fx;
         }
-    } while (ANIM_DELAY_MIN == 0);
+        if (thread->delay < delay_next) {
+            delay_next = thread->delay;
+        }
+    }
 
     /* Render threads to come into effect next animation step */
     for (i = 0; i < ARRAY_SIZE(ANIM_THREADS); i++) {
         thread = &ANIM_THREADS[i];
-        if (thread->delay == ANIM_DELAY_MIN) {
+        if (thread->delay == delay_next) {
             leds_render_list(thread->led_list, thread->led_num);
         }
     }
 
-    return ANIM_DELAY_MIN;
+    return (ANIM_DELAY = delay_next);
 }
