@@ -7,6 +7,7 @@ LIBS = -lstammer
 # In order of symbol resolution
 MODS = \
     leds \
+    anim_fx_shimmer \
     anim_fx \
     anim \
     card

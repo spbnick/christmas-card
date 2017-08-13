@@ -2,6 +2,7 @@
  * Card animation effect-stepping functions
  */
 
+#include "anim_fx_shimmer.h"
 #include "anim_fx.h"
 #include "leds.h"
 #include <prng.h>
@@ -580,181 +581,21 @@ anim_fx_balls_snow(bool first, void **pnext_fx)
 unsigned int
 anim_fx_balls_shimmer(bool first, void **pnext_fx)
 {
-    /* Indexes of possible stages of dimmed balls */
-    enum stage_idx {
-        /* Waiting to be dimmed */
-        STAGE_IDX_WAITING,
-        /* Dimming */
-        STAGE_IDX_DIMMING,
-        /* Dimmed */
-        STAGE_IDX_DIM,
-        /* Restoring */
-        STAGE_IDX_RESTORING,
-        /* Restored, resting */
-        STAGE_IDX_RESTING,
-        /* Number of stage IDs, not a valid ID */
-        STAGE_IDX_NUM
-    };
-
-    /* Stage description */
-    struct stage {
-        /* Number of steps */
-        uint8_t         step_num;
-        /* Brightness offset of each step */
-        int8_t          step_br_off;
-        /* Delay of each step */
-        unsigned int    step_delay;
-    };
-
-    /* State of a dimmed ball */
-    struct ball {
-        /* Ball LED index */
-        uint8_t         led;
-        /* Stages */
-        struct stage    stage_list[STAGE_IDX_NUM];
-        /* Current stage index */
-        enum stage_idx  stage_idx;
-        /* Current stage's remaining steps */
-        uint8_t         steps_left;
-        /* Current step's remaining delay */
-        unsigned int    delay_left;
-        /* Current brightness */
-        int8_t          br;
-    };
-
-    /* State of the balls currently blinking */
-    static struct ball active_list[8];
-
-    /* Circular list of balls which blinked last */
+    static struct anim_fx_shimmer_slot slot_list[8];
     static uint8_t prev_list[16];
-    static uint8_t prev_pos;
-
-    /* Delay since the last invocation */
-    static unsigned int delay;
-
-    size_t i;
-    struct ball *ball;
-    struct stage *stage_list;
-    unsigned int new_delay;
+    static struct anim_fx_shimmer_state state;
 
     (void)pnext_fx;
 
     if (first) {
-        delay = 0;
-        for (i = 0; i < ARRAY_SIZE(active_list); i++) {
-            ball = &active_list[i];
-            stage_list = ball->stage_list;
-
-            /* Assume maximum brightness */
-            ball->br = LEDS_BR_MAX;
-
-            /* Fill in stage constants */
-            stage_list[STAGE_IDX_WAITING].step_num = 1;
-            stage_list[STAGE_IDX_WAITING].step_br_off = 0;
-
-            stage_list[STAGE_IDX_DIMMING].step_num = 6;
-            stage_list[STAGE_IDX_DIMMING].step_br_off = -2;
-            stage_list[STAGE_IDX_DIMMING].step_delay = 25;
-
-            stage_list[STAGE_IDX_DIM].step_num = 1;
-            stage_list[STAGE_IDX_DIM].step_br_off = 0;
-            stage_list[STAGE_IDX_DIM].step_delay = 100;
-
-            stage_list[STAGE_IDX_RESTORING].step_num = 6;
-            stage_list[STAGE_IDX_RESTORING].step_br_off = 2;
-            stage_list[STAGE_IDX_RESTORING].step_delay = 25;
-
-            stage_list[STAGE_IDX_RESTING].step_num = 1;
-            stage_list[STAGE_IDX_RESTING].step_br_off = 0;
-
-            /* Position at the end of the cycle */
-            ball->stage_idx = STAGE_IDX_NUM - 1;
-            ball->steps_left = 0;
-            ball->delay_left = 0;
-        }
-
-        /* No balls blinked before */
-        for (i = 0; i < ARRAY_SIZE(prev_list); i++) {
-            prev_list[i] = LEDS_BALLS_NUM;
-        }
-        prev_pos = 0;
+        anim_fx_shimmer_init(&state,
+                             LEDS_BALLS_LIST, ARRAY_SIZE(LEDS_BALLS_LIST),
+                             slot_list, ARRAY_SIZE(slot_list),
+                             prev_list, ARRAY_SIZE(prev_list),
+                             LEDS_BR_MAX, 5000);
     }
 
-    /*
-     * Advance the state of every dimmed ball
-     * and determine delay to next update
-     */
-    new_delay = UINT_MAX;
-    for (i = 0; i < ARRAY_SIZE(active_list); i++) {
-        ball = &active_list[i];
-        stage_list = ball->stage_list;
-
-        /* Subtract elapsed delay */
-        ball->delay_left -= delay;
-
-        /* While the current step has no delay left */
-        while (ball->delay_left == 0) {
-            /* While the current stage has no steps left */
-            while (ball->steps_left == 0) {
-                /* If cycle is over */
-                if (ball->stage_idx >= (STAGE_IDX_NUM - 1)) {
-                    bool found;
-                    size_t j;
-                    /* Pick an LED that wasn't blinked recently */
-                    do {
-                        found = false;
-                        ball->led = LEDS_BALLS_LIST[((prng_next() & 0xffff) *
-                                                     LEDS_BALLS_NUM) >> 16];
-                        for (j = 0; j < ARRAY_SIZE(prev_list) && !found; j++) {
-                            if (ball->led == prev_list[j]) {
-                                found = true;
-                            }
-                        }
-                    } while (found);
-                    prev_list[prev_pos++] = ball->led;
-                    if (prev_pos >= ARRAY_SIZE(prev_list)) {
-                        prev_pos = 0;
-                    }
-
-                    /* Determine stage timing */
-                    stage_list[STAGE_IDX_WAITING].step_delay =
-                            (prng_next() & 0x7ff);
-                    stage_list[STAGE_IDX_RESTING].step_delay =
-                            (prng_next() & 0x7ff);
-
-                    /* Restart */
-                    ball->stage_idx = 0;
-                } else {
-                    /* Move onto next stage */
-                    ball->stage_idx++;
-                }
-                ball->steps_left = stage_list[ball->stage_idx].step_num;
-            }
-            ball->steps_left--;
-            ball->delay_left = stage_list[ball->stage_idx].step_delay;
-            ball->br += stage_list[ball->stage_idx].step_br_off;
-        }
-
-        /* Determine delay to next update */
-        if (ball->delay_left < new_delay) {
-            new_delay = ball->delay_left;
-        }
-    }
-
-    /*
-     * Schedule LED updates of all the balls changing next
-     */
-    for (i = 0; i < ARRAY_SIZE(active_list); i++) {
-        ball = &active_list[i];
-        /* If the ball is changing on the next step */
-        if (ball->delay_left == new_delay) {
-            /* Schedule brightness update */
-            LEDS_BR[ball->led] = ball->br;
-        }
-    }
-
-    /* Call us after the next update */
-    return (delay = new_delay);
+    return anim_fx_shimmer_step(&state);
 }
 
 /** Pool of the balls effect-stepping functions to choose from randomly */
