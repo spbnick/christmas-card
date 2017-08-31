@@ -28,7 +28,7 @@ anim_fx_stars_shimmer(bool first, void **pnext_fx)
         /* Dimming, half-dimmed */
         STATE_DIMMER,
         /* Fully dimmed */
-        STATE_DIM,
+        STATE_DIMMED,
         /* Restoring, half-brightened */
         STATE_RESTORING,
         /* Bright (restored), resting */
@@ -51,7 +51,7 @@ anim_fx_stars_shimmer(bool first, void **pnext_fx)
     static const uint8_t state_next_br[STATE_NUM] = {
         [STATE_WAIT]        = LEDS_BR_MAX * 5 / 8,
         [STATE_DIMMER]      = LEDS_BR_MAX / 2,
-        [STATE_DIM]         = LEDS_BR_MAX * 5 / 8,
+        [STATE_DIMMED]      = LEDS_BR_MAX * 5 / 8,
         [STATE_RESTORING]   = LEDS_BR_MAX * 3 / 4,
         [STATE_RESTORED]    = LEDS_BR_MAX * 3 / 4,
     };
@@ -96,7 +96,7 @@ anim_fx_stars_shimmer(bool first, void **pnext_fx)
                                 (PRNG_MAX >> 8)];
                 star->state_delay[STATE_WAIT] = (prng_next() & 0xf) << 9;
                 star->state_delay[STATE_DIMMER] = 0x80;
-                star->state_delay[STATE_DIM] = 0x100;
+                star->state_delay[STATE_DIMMED] = 0x100;
                 star->state_delay[STATE_RESTORING] = 0x80;
                 star->state_delay[STATE_RESTORED] =
                     0x2000 - star->state_delay[STATE_WAIT];
