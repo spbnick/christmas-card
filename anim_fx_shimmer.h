@@ -35,10 +35,10 @@ enum anim_fx_shimmer_stage_idx {
     ANIM_FX_SHIMMER_STAGE_IDX_NUM
 };
 
-/** Slot for a shimmering LED */
-struct anim_fx_shimmer_slot {
+/** State of a shimmering LED */
+struct anim_fx_shimmer_led {
     /** LED index */
-    uint8_t                         led;
+    uint8_t                         idx;
     /** Stages */
     struct anim_fx_shimmer_stage    stage_list[ANIM_FX_SHIMMER_STAGE_IDX_NUM];
     /** Current stage index */
@@ -48,70 +48,51 @@ struct anim_fx_shimmer_slot {
     /** Current step's remaining delay */
     unsigned int                    delay_left;
     /** Current brightness */
-    int8_t                          br;
+    uint8_t                         br;
+    /** Next brightness */
+    uint8_t                         next_br;
 };
 
 /** State of shimmering animation */
-struct anim_fx_shimmer_state {
-    /** Array of LED indices to shimmer */
-    const uint8_t                  *led_list;
-    /** Number of LED indices to shimmer */
-    size_t                          led_num;
-
+struct anim_fx_shimmer {
     /** "Bright" LED brightness */
-    uint8_t                         br;
+    uint8_t                     br;
+    /** Maximum "bright" state delay, ms */
+    unsigned int                br_delay;
+    /** Maximum "dimmed" state delay, ms */
+    unsigned int                dim_delay;
 
-    /** Array of slots for currently shimmering LEDs */
-    struct anim_fx_shimmer_slot    *slot_list;
-    /** Number of slots for currently shimmering LEDs */
-    size_t                          slot_num;
-
-    /** Circular array of LED indices which were shimmering last */
-    uint8_t                        *prev_list;
-    /** Size of circular array of LED indices which were shimmering last */
-    size_t                          prev_num;
-    /**
-     * Position where the next LED index should be written in circular array
-     * of LEDs which shimmered last
-     */
-    size_t                          prev_pos;
-
-    /**
-     * Remaining effect time, ms. UINT_MAX means infinity.
-     */
-    unsigned int                    remaining;
+    /** Array of LED states */
+    struct anim_fx_shimmer_led *led_list;
+    /** Number of LEDs */
+    uint8_t                     led_num;
 
     /**
      * Delay until the last step should take effect,
      * since the previous one did, ms.
      */
-    unsigned int                    delay;
+    unsigned int                delay;
 };
 
 /**
  * Initialize an LED shimmering state.
  *
- * @param state         The state to initialize.
- * @param led_list      Array of indices of LEDs to shimmer.
- * @param led_num       Number of indices of LEDs to shimmer.
- * @param slot_list     Array of LED shimmering slots.
- * @param slot_num      Number of LED shimmering slots.
- * @param prev_list     Circular array of LED indices which were shimmering last.
- * @param prev_num      Size of circular array of LED indices which were shimmering last.
- * @param br            Nominal brightness of non-dimmed LEDs.
- * @param duration      Duration of shimmering, excluding fade-in/out time,
- *                      UINT_MAX means infinity (and no fade-out).
- *
+ * @param shimmer   The shimmering animation state to initialize.
+ * @param led_list  Array of shimmering LED states.
+ * @param idx_list  Array of indices of LEDs to shimmer.
+ * @param led_num   Number of LEDs to shimmer.
+ *                  Length of both idx_list and led_list.
+ * @param br        Nominal brightness of non-dimmed LEDs.
+ * @param br_delay  Maximum bright state delay, ms.
+ * @param dim_delay Maximum dimmed state delay, ms.
  */
-extern void anim_fx_shimmer_init(struct anim_fx_shimmer_state *state,
-                                 const uint8_t *led_list,
+extern void anim_fx_shimmer_init(struct anim_fx_shimmer *shimmer,
+                                 struct anim_fx_shimmer_led *led_list,
+                                 const uint8_t *idx_list,
                                  size_t led_num,
-                                 struct anim_fx_shimmer_slot *slot_list,
-                                 size_t slot_num,
-                                 uint8_t *prev_list,
-                                 size_t prev_num,
                                  uint8_t br,
-                                 unsigned int duration);
+                                 unsigned int br_delay,
+                                 unsigned int dim_delay);
 
 /**
  * Execute an LED shimmering step with a specified state.
@@ -119,6 +100,6 @@ extern void anim_fx_shimmer_init(struct anim_fx_shimmer_state *state,
  * @return The delay after which the state updated by this function should
  *         become active.
  */
-extern unsigned int anim_fx_shimmer_step(struct anim_fx_shimmer_state *state);
+extern unsigned int anim_fx_shimmer_step(struct anim_fx_shimmer *state);
 
 #endif /* _ANIM_FX_SHIMMER_H */

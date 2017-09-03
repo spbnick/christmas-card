@@ -9,14 +9,23 @@
 #include <stdbool.h>
 
 void
-anim_fx_shimmer_init(struct anim_fx_shimmer_state *state,
-                     const uint8_t *led_list, size_t led_num,
-                     struct anim_fx_shimmer_slot *slot_list, size_t slot_num,
-                     uint8_t *prev_list, size_t prev_num,
+anim_fx_shimmer_init(struct anim_fx_shimmer *shimmer,
+                     struct anim_fx_shimmer_led *led_list,
+                     const uint8_t *idx_list,
+                     size_t led_num,
                      uint8_t br,
-                     unsigned int duration)
+                     unsigned int br_delay,
+                     unsigned int dim_delay)
 {
     size_t i;
+    /* Number of LEDs dimmed at once */
+    size_t dim_num = led_num / 4;
+    if (dim_num == 0) {
+        dim_num = led_num / 2;
+    }
+    if (dim_num == 0) {
+        dim_num = led_num;
+    }
     /* Brightness reduction of a fully-dimmed LED */
     uint8_t dim_br_off = br / 4;
     /* Number of dimming/restoring steps */
@@ -30,10 +39,13 @@ anim_fx_shimmer_init(struct anim_fx_shimmer_state *state,
     /* Delay of each dimming/restoring step */
     const unsigned int dim_step_delay = 150 / dim_step_num;
 
-    /* Initialize slot list */
-    for (i = 0; i < slot_num; i++) {
-        struct anim_fx_shimmer_slot *slot = &slot_list[i];
-        struct anim_fx_shimmer_stage *stage_list = slot->stage_list;
+    /* Initialize led list */
+    for (i = 0; i < led_num; i++) {
+        struct anim_fx_shimmer_led *led = &led_list[i];
+        struct anim_fx_shimmer_stage *stage_list = led->stage_list;
+
+        /* Assign the LED */
+        led->idx = idx_list[i];
 
         /* Fill in stage constants */
         stage_list[ANIM_FX_SHIMMER_STAGE_IDX_BRIGHT].step_num = 1;
@@ -48,7 +60,6 @@ anim_fx_shimmer_init(struct anim_fx_shimmer_state *state,
 
         stage_list[ANIM_FX_SHIMMER_STAGE_IDX_DIMMED].step_num = 1;
         stage_list[ANIM_FX_SHIMMER_STAGE_IDX_DIMMED].step_br_off = 0;
-        stage_list[ANIM_FX_SHIMMER_STAGE_IDX_DIMMED].step_delay = 100;
 
         stage_list[ANIM_FX_SHIMMER_STAGE_IDX_RESTORING].step_num =
                                                         dim_step_num;
@@ -58,113 +69,87 @@ anim_fx_shimmer_init(struct anim_fx_shimmer_state *state,
                                                         dim_step_delay;
 
         /* Position at the end of the cycle */
-        slot->stage_idx = ANIM_FX_SHIMMER_STAGE_IDX_NUM - 1;
-        slot->steps_left = 0;
-        slot->delay_left = 0;
+        led->stage_idx = ANIM_FX_SHIMMER_STAGE_IDX_NUM - 1;
+        led->steps_left = 0;
+        led->delay_left = 0;
 
         /* Assume maximum brightness */
-        slot->br = br;
-    }
-
-    /* Initialize previously-shimmered LED list */
-    for (i = 0; i < prev_num; i++) {
-        /* Invalid index means unused */
-        prev_list[i] = LEDS_NUM;
+        led->br = br;
     }
 
     /* Initialize state */
-    state->led_list = led_list;
-    state->led_num = led_num;
-    state->br = br;
-    state->slot_list = slot_list;
-    state->slot_num = slot_num;
-    state->prev_list = prev_list;
-    state->prev_num = prev_num;
-    state->prev_pos = 0;
-    state->remaining = duration;
-    state->delay = 0;
+    shimmer->br = br;
+    shimmer->br_delay = br_delay;
+    shimmer->dim_delay = dim_delay;
+    shimmer->led_list = led_list;
+    shimmer->led_num = led_num;
+    shimmer->delay = 0;
 }
 
 unsigned int
-anim_fx_shimmer_step(struct anim_fx_shimmer_state *state)
+anim_fx_shimmer_step(struct anim_fx_shimmer *shimmer)
 {
-    size_t i;
-    struct anim_fx_shimmer_slot *slot;
+    uint8_t i;
+    struct anim_fx_shimmer_led *led;
     struct anim_fx_shimmer_stage *stage_list;
     unsigned int new_delay;
 
     /*
-     * Advance the state of every dimmed ball
+     * Advance the state of every dimmed LED
      * and determine delay to next update
      */
     new_delay = UINT_MAX;
-    for (i = 0; i < state->slot_num; i++) {
-        slot = &state->slot_list[i];
-        stage_list = slot->stage_list;
+    for (i = 0; i < shimmer->led_num; i++) {
+        led = &shimmer->led_list[i];
+        stage_list = led->stage_list;
 
         /* Subtract elapsed delay */
-        slot->delay_left -= state->delay;
+        led->delay_left -= shimmer->delay;
 
         /* While the current step has no delay left */
-        while (slot->delay_left == 0) {
+        while (led->delay_left == 0) {
             /* While the current stage has no steps left */
-            while (slot->steps_left == 0) {
+            while (led->steps_left == 0) {
                 /* If cycle is over */
-                if (slot->stage_idx >= (ANIM_FX_SHIMMER_STAGE_IDX_NUM - 1)) {
-                    bool found;
-                    size_t j;
-                    /* Pick an LED that wasn't dimmed recently */
-                    do {
-                        found = false;
-                        slot->led = state->led_list[((prng_next() & 0xffff) *
-                                                     state->led_num) >> 16];
-                        for (j = 0; j < state->prev_num && !found; j++) {
-                            if (slot->led == state->prev_list[j]) {
-                                found = true;
-                            }
-                        }
-                    } while (found);
-                    state->prev_list[state->prev_pos++] = slot->led;
-                    if (state->prev_pos >= state->prev_num) {
-                        state->prev_pos = 0;
-                    }
-
-                    /* Determine stage timing */
+                if (led->stage_idx >= (ANIM_FX_SHIMMER_STAGE_IDX_NUM - 1)) {
+                    /* Determine bright state delay */
                     stage_list[ANIM_FX_SHIMMER_STAGE_IDX_BRIGHT].step_delay =
-                            (prng_next() & 0xfff);
-
+                        ((prng_next() & 0xffff) * shimmer->br_delay) >> 16;
+                    /* Determine dim state delay */
+                    stage_list[ANIM_FX_SHIMMER_STAGE_IDX_DIMMED].step_delay =
+                        ((prng_next() & 0xffff) * shimmer->dim_delay) >> 16;
                     /* Restart */
-                    slot->stage_idx = 0;
+                    led->stage_idx = 0;
                 } else {
                     /* Move onto next stage */
-                    slot->stage_idx++;
+                    led->stage_idx++;
                 }
-                slot->steps_left = stage_list[slot->stage_idx].step_num;
+                led->steps_left = stage_list[led->stage_idx].step_num;
             }
-            slot->steps_left--;
-            slot->delay_left = stage_list[slot->stage_idx].step_delay;
-            slot->br += stage_list[slot->stage_idx].step_br_off;
+            led->steps_left--;
+            led->delay_left = stage_list[led->stage_idx].step_delay;
+            led->next_br = led->br + stage_list[led->stage_idx].step_br_off;
         }
 
         /* Determine delay to next update */
-        if (slot->delay_left < new_delay) {
-            new_delay = slot->delay_left;
+        if (led->delay_left < new_delay) {
+            new_delay = led->delay_left;
         }
     }
 
     /*
-     * Schedule LED updates of all the balls changing next
+     * Schedule LED updates of all the LEDs changing next
      */
-    for (i = 0; i < state->slot_num; i++) {
-        slot = &state->slot_list[i];
-        /* If the ball is changing on the next step */
-        if (slot->delay_left == new_delay) {
-            /* Schedule brightness update */
-            LEDS_BR[slot->led] = slot->br;
+    for (i = 0; i < shimmer->led_num; i++) {
+        led = &shimmer->led_list[i];
+        /* If the LED is changing on the next step */
+        if (led->delay_left == new_delay) {
+            led->br = led->next_br;
         }
+        LEDS_BR[led->idx] = led->br;
     }
 
     /* Call us after the next update */
-    return (state->delay = new_delay);
+    return (shimmer->delay = new_delay);
 }
 

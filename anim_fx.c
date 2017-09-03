@@ -581,21 +581,18 @@ anim_fx_balls_snow(bool first, void **pnext_fx)
 unsigned int
 anim_fx_balls_shimmer(bool first, void **pnext_fx)
 {
-    static struct anim_fx_shimmer_slot slot_list[8];
-    static uint8_t prev_list[16];
-    static struct anim_fx_shimmer_state state;
+    static struct anim_fx_shimmer shimmer;
+    static struct anim_fx_shimmer_led led_list[ARRAY_SIZE(LEDS_BALLS_LIST)];
 
     (void)pnext_fx;
 
     if (first) {
-        anim_fx_shimmer_init(&state,
-                             LEDS_BALLS_LIST, ARRAY_SIZE(LEDS_BALLS_LIST),
-                             slot_list, ARRAY_SIZE(slot_list),
-                             prev_list, ARRAY_SIZE(prev_list),
-                             LEDS_BR_MAX, 5000);
+        anim_fx_shimmer_init(&shimmer,
+                             led_list, LEDS_BALLS_LIST, ARRAY_SIZE(led_list),
+                             LEDS_BR_MAX, 10000, 300);
     }
 
-    return anim_fx_shimmer_step(&state);
+    return anim_fx_shimmer_step(&shimmer);
 }
 
 /** Pool of the balls effect-stepping functions to choose from randomly */
