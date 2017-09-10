@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /** Shimmer stage description */
 struct anim_fx_shimmer_stage {
@@ -58,9 +59,22 @@ struct anim_fx_shimmer {
     /** "Bright" LED brightness */
     uint8_t                     br;
     /** Maximum "bright" state delay, ms */
-    unsigned int                br_delay;
+    unsigned int                bright_delay;
     /** Maximum "dimmed" state delay, ms */
-    unsigned int                dim_delay;
+    unsigned int                dimmed_delay;
+
+    /** Number of fade-in/out steps */
+    uint8_t                     fade_step_num;
+    /** Delay (duration) of each fade step, ms */
+    unsigned int                fade_step_delay;
+
+    /** Number of fade-in/out steps left */
+    uint8_t                     fade_steps_left;
+    /** Delay left in current fade-in/out step, ms */
+    unsigned int                fade_step_delay_left;
+
+    /** Animation duration (excluding fade-in/out), ms **/
+    unsigned int                duration;
 
     /** Array of LED states */
     struct anim_fx_shimmer_led *led_list;
@@ -77,29 +91,37 @@ struct anim_fx_shimmer {
 /**
  * Initialize an LED shimmering state.
  *
- * @param shimmer   The shimmering animation state to initialize.
- * @param led_list  Array of shimmering LED states.
- * @param idx_list  Array of indices of LEDs to shimmer.
- * @param led_num   Number of LEDs to shimmer.
- *                  Length of both idx_list and led_list.
- * @param br        Nominal brightness of non-dimmed LEDs.
- * @param br_delay  Maximum bright state delay, ms.
- * @param dim_delay Maximum dimmed state delay, ms.
+ * @param shimmer       The shimmering animation state to initialize.
+ * @param led_list      Array of shimmering LED states.
+ * @param idx_list      Array of indices of LEDs to shimmer.
+ * @param led_num       Number of LEDs to shimmer.
+ *                      Length of both idx_list and led_list.
+ * @param br            Nominal brightness of non-dimmed LEDs.
+ * @param bright_delay  Maximum bright state delay, ms.
+ * @param dimmed_delay  Maximum dimmed state delay, ms.
+ * @param fade_delay    Fade-in/out delay, ms.
+ * @param duration      Animation duration (excluding fade-in/out), ms.
+ *                      UINT_MAX for infinity (no fade-out).
  */
 extern void anim_fx_shimmer_init(struct anim_fx_shimmer *shimmer,
                                  struct anim_fx_shimmer_led *led_list,
                                  const uint8_t *idx_list,
                                  size_t led_num,
                                  uint8_t br,
-                                 unsigned int br_delay,
-                                 unsigned int dim_delay);
+                                 unsigned int bright_delay,
+                                 unsigned int dimmed_delay,
+                                 unsigned int fade_delay,
+                                 unsigned int duration);
 
 /**
  * Execute an LED shimmering step with a specified state.
  *
- * @return The delay after which the state updated by this function should
- *         become active.
+ * @param pdelay    Location for the delay after which the state updated by
+ *                  this function should become active.
+ *
+ * @return True if the function scheduled the last step, false otherwise.
  */
-extern unsigned int anim_fx_shimmer_step(struct anim_fx_shimmer *state);
+extern bool anim_fx_shimmer_step(struct anim_fx_shimmer *state,
+                                 unsigned int *pdelay);
 
 #endif /* _ANIM_FX_SHIMMER_H */

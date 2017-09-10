@@ -583,16 +583,18 @@ anim_fx_balls_shimmer(bool first, void **pnext_fx)
 {
     static struct anim_fx_shimmer shimmer;
     static struct anim_fx_shimmer_led led_list[ARRAY_SIZE(LEDS_BALLS_LIST)];
-
-    (void)pnext_fx;
+    unsigned int delay;
 
     if (first) {
         anim_fx_shimmer_init(&shimmer,
                              led_list, LEDS_BALLS_LIST, ARRAY_SIZE(led_list),
-                             LEDS_BR_MAX, 10000, 300);
+                             LEDS_BR_MAX, 10000, 300, 7000, 30000);
     }
 
-    return anim_fx_shimmer_step(&shimmer);
+    if (anim_fx_shimmer_step(&shimmer, &delay)) {
+        *pnext_fx = anim_fx_balls_random;
+    }
+    return delay;
 }
 
 /** Pool of the balls effect-stepping functions to choose from randomly */
@@ -601,6 +603,7 @@ static const anim_fx_fn ANIM_FX_BALLS_RANDOM_POOL[] = {
     anim_fx_balls_glitter,
     anim_fx_balls_cycle_colors,
     anim_fx_balls_snow,
+    anim_fx_balls_shimmer,
 };
 
 /** Index of the balls effect-stepping function chosen last */

@@ -5,8 +5,8 @@
 #include "anim_fx_shimmer.h"
 #include "leds.h"
 #include <prng.h>
+#include <misc.h>
 #include <limits.h>
-#include <stdbool.h>
 
 void
 anim_fx_shimmer_init(struct anim_fx_shimmer *shimmer,
@@ -14,8 +14,10 @@ anim_fx_shimmer_init(struct anim_fx_shimmer *shimmer,
                      const uint8_t *idx_list,
                      size_t led_num,
                      uint8_t br,
-                     unsigned int br_delay,
-                     unsigned int dim_delay)
+                     unsigned int bright_delay,
+                     unsigned int dimmed_delay,
+                     unsigned int fade_delay,
+                     unsigned int duration)
 {
     size_t i;
     /* Number of LEDs dimmed at once */
@@ -79,26 +81,56 @@ anim_fx_shimmer_init(struct anim_fx_shimmer *shimmer,
 
     /* Initialize state */
     shimmer->br = br;
-    shimmer->br_delay = br_delay;
-    shimmer->dim_delay = dim_delay;
+    shimmer->bright_delay = bright_delay;
+    shimmer->dimmed_delay = dimmed_delay;
+
+    shimmer->fade_step_num = LEDS_BR_NUM;
+    shimmer->fade_step_delay = fade_delay / shimmer->fade_step_num;
+
+    shimmer->fade_steps_left = shimmer->fade_step_num;
+    shimmer->fade_step_delay_left = shimmer->fade_step_delay;
+
+    shimmer->duration = duration;
     shimmer->led_list = led_list;
     shimmer->led_num = led_num;
     shimmer->delay = 0;
 }
 
-unsigned int
-anim_fx_shimmer_step(struct anim_fx_shimmer *shimmer)
+bool
+anim_fx_shimmer_step(struct anim_fx_shimmer *shimmer, unsigned int *pdelay)
 {
     uint8_t i;
     struct anim_fx_shimmer_led *led;
     struct anim_fx_shimmer_stage *stage_list;
-    unsigned int new_delay;
+    unsigned int delay;
+
+    /* If fading in/out */
+    if (shimmer->fade_steps_left > 0) {
+        /* Decrease time to next fade step */
+        shimmer->fade_step_delay_left -= shimmer->delay;
+        /* If this step is over */
+        if (shimmer->fade_step_delay_left == 0) {
+            /* Decrease steps */
+            shimmer->fade_steps_left--;
+            /* Re-arm step timer */
+            shimmer->fade_step_delay_left = shimmer->fade_step_delay;
+        }
+    /* Else, if we're in effect body */
+    } else if (shimmer->duration > 0) {
+        /* Decrease duration of effect body */
+        shimmer->duration -= shimmer->delay;
+        /* If effect body is over */
+        if (shimmer->duration == 0) {
+            /* Start fade-out */
+            shimmer->fade_steps_left = shimmer->fade_step_num;
+        }
+    }
 
     /*
      * Advance the state of every dimmed LED
      * and determine delay to next update
      */
-    new_delay = UINT_MAX;
+    delay = UINT_MAX;
     for (i = 0; i < shimmer->led_num; i++) {
         led = &shimmer->led_list[i];
         stage_list = led->stage_list;
@@ -114,10 +146,10 @@ anim_fx_shimmer_step(struct anim_fx_shimmer *shimmer)
                 if (led->stage_idx >= (ANIM_FX_SHIMMER_STAGE_IDX_NUM - 1)) {
                     /* Determine bright state delay */
                     stage_list[ANIM_FX_SHIMMER_STAGE_IDX_BRIGHT].step_delay =
-                        ((prng_next() & 0xffff) * shimmer->br_delay) >> 16;
+                        ((prng_next() & 0xffff) * shimmer->bright_delay) >> 16;
                     /* Determine dim state delay */
                     stage_list[ANIM_FX_SHIMMER_STAGE_IDX_DIMMED].step_delay =
-                        ((prng_next() & 0xffff) * shimmer->dim_delay) >> 16;
+                        ((prng_next() & 0xffff) * shimmer->dimmed_delay) >> 16;
                     /* Restart */
                     led->stage_idx = 0;
                 } else {
@@ -132,24 +164,49 @@ anim_fx_shimmer_step(struct anim_fx_shimmer *shimmer)
         }
 
         /* Determine delay to next update */
-        if (led->delay_left < new_delay) {
-            new_delay = led->delay_left;
+        if (led->delay_left < delay) {
+            delay = led->delay_left;
         }
     }
 
+    /* If fading-in/out */
+    if (shimmer->fade_steps_left > 0) {
+        /* Schedule for fading step boundary */
+        delay = MIN(delay, shimmer->fade_step_delay_left);
+    } else if (shimmer->duration > 0) {
+        /* Schedule for effect body boundary */
+        delay = MIN(delay, shimmer->duration);
+    }
+
     /*
-     * Schedule LED updates of all the LEDs changing next
+     * Schedule LED updates
      */
     for (i = 0; i < shimmer->led_num; i++) {
         led = &shimmer->led_list[i];
         /* If the LED is changing on the next step */
-        if (led->delay_left == new_delay) {
+        if (led->delay_left == delay) {
             led->br = led->next_br;
         }
-        LEDS_BR[led->idx] = led->br;
+        /* If fading-in/out */
+        if (shimmer->fade_steps_left > 0) {
+            /* If fading in */
+            if (shimmer->duration > 0) {
+                LEDS_BR[led->idx] = (unsigned int)led->br *
+                                    (shimmer->fade_step_num -
+                                     shimmer->fade_steps_left + 1) /
+                                    shimmer->fade_step_num;
+            } else {
+                LEDS_BR[led->idx] = (unsigned int)led->br *
+                                    (shimmer->fade_steps_left - 1) /
+                                    shimmer->fade_step_num;
+            }
+        } else {
+            LEDS_BR[led->idx] = (unsigned int)led->br;
+        }
     }
 
-    /* Call us after the next update */
-    return (shimmer->delay = new_delay);
+    *pdelay = (shimmer->delay = delay);
+    return (shimmer->duration == 0 &&
+            shimmer->fade_steps_left == 1 &&
+            shimmer->fade_step_delay_left == delay);
 }
-
