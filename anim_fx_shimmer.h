@@ -56,8 +56,6 @@ struct anim_fx_shimmer_led {
 
 /** State of shimmering animation */
 struct anim_fx_shimmer {
-    /** "Bright" LED brightness */
-    uint8_t                     br;
     /** Maximum "bright" state delay, ms */
     unsigned int                bright_delay;
     /** Maximum "dimmed" state delay, ms */
@@ -96,8 +94,9 @@ struct anim_fx_shimmer {
  * @param idx_list      Array of indices of LEDs to shimmer.
  * @param led_num       Number of LEDs to shimmer.
  *                      Length of both idx_list and led_list.
- * @param br            Nominal brightness of non-dimmed LEDs.
+ * @param bright_br     Brightness of non-dimmed LEDs.
  * @param bright_delay  Maximum bright state delay, ms.
+ * @param dimmed_br     Brightness of dimmed LEDs.
  * @param dimmed_delay  Maximum dimmed state delay, ms.
  * @param fade_delay    Fade-in/out delay, ms.
  * @param duration      Animation duration (excluding fade-in/out), ms.
@@ -107,8 +106,9 @@ extern void anim_fx_shimmer_init(struct anim_fx_shimmer *shimmer,
                                  struct anim_fx_shimmer_led *led_list,
                                  const uint8_t *idx_list,
                                  size_t led_num,
-                                 uint8_t br,
+                                 uint8_t bright_br,
                                  unsigned int bright_delay,
+                                 uint8_t dimmed_br,
                                  unsigned int dimmed_delay,
                                  unsigned int fade_delay,
                                  unsigned int duration);

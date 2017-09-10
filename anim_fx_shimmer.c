@@ -13,8 +13,9 @@ anim_fx_shimmer_init(struct anim_fx_shimmer *shimmer,
                      struct anim_fx_shimmer_led *led_list,
                      const uint8_t *idx_list,
                      size_t led_num,
-                     uint8_t br,
+                     uint8_t bright_br,
                      unsigned int bright_delay,
+                     uint8_t dimmed_br,
                      unsigned int dimmed_delay,
                      unsigned int fade_delay,
                      unsigned int duration)
@@ -29,7 +30,7 @@ anim_fx_shimmer_init(struct anim_fx_shimmer *shimmer,
         dim_num = led_num;
     }
     /* Brightness reduction of a fully-dimmed LED */
-    uint8_t dim_br_off = br / 4;
+    uint8_t dim_br_off = bright_br - dimmed_br;
     /* Number of dimming/restoring steps */
     uint8_t dim_step_num = 6;
     /* Brightness offset for each dimming/restoring step (absolute) */
@@ -75,12 +76,11 @@ anim_fx_shimmer_init(struct anim_fx_shimmer *shimmer,
         led->steps_left = 0;
         led->delay_left = 0;
 
-        /* Assume maximum brightness */
-        led->br = br;
+        /* Assume bright */
+        led->br = bright_br;
     }
 
     /* Initialize state */
-    shimmer->br = br;
     shimmer->bright_delay = bright_delay;
     shimmer->dimmed_delay = dimmed_delay;
 

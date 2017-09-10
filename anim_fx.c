@@ -588,7 +588,18 @@ anim_fx_balls_shimmer(bool first, void **pnext_fx)
     if (first) {
         anim_fx_shimmer_init(&shimmer,
                              led_list, LEDS_BALLS_LIST, ARRAY_SIZE(led_list),
-                             LEDS_BR_MAX, 10000, 300, 7000, 30000);
+                             /* Bright state brightness */
+                             LEDS_BR_MAX,
+                             /* Max bright state duration, ms */
+                             10000,
+                             /* Dimmed state brightness */
+                             LEDS_BR_MAX * 3 / 4,
+                             /* Max dimmed state duration, ms */
+                             300,
+                             /* Fade-in/out duration, ms */
+                             7000,
+                             /* Effect body duration, ms */
+                             30000);
     }
 
     if (anim_fx_shimmer_step(&shimmer, &delay)) {
