@@ -115,8 +115,8 @@ anim_fx_shimmer_step(struct anim_fx_shimmer *shimmer, unsigned int *pdelay)
             /* Re-arm step timer */
             shimmer->fade_step_delay_left = shimmer->fade_step_delay;
         }
-    /* Else, if we're in effect body */
-    } else if (shimmer->duration > 0) {
+    /* Else, if we're in a limited-time effect body */
+    } else if (shimmer->duration > 0 && shimmer->duration < UINT_MAX) {
         /* Decrease duration of effect body */
         shimmer->duration -= shimmer->delay;
         /* If effect body is over */
@@ -173,7 +173,8 @@ anim_fx_shimmer_step(struct anim_fx_shimmer *shimmer, unsigned int *pdelay)
     if (shimmer->fade_steps_left > 0) {
         /* Schedule for fading step boundary */
         delay = MIN(delay, shimmer->fade_step_delay_left);
-    } else if (shimmer->duration > 0) {
+    /* Else, if we're in a limited-time effect body */
+    } else if (shimmer->duration > 0 && shimmer->duration < UINT_MAX) {
         /* Schedule for effect body boundary */
         delay = MIN(delay, shimmer->duration);
     }
