@@ -35,7 +35,7 @@ static struct anim_thread  ANIM_THREADS[] = {
     {
         .led_list = LEDS_STARS_LIST,
         .led_num = LEDS_STARS_NUM,
-        .fx = anim_fx_stars_fade_in,
+        .fx = anim_fx_stars_shimmer,
         .first = true,
         .delay = 0,
     },

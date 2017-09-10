@@ -27,11 +27,8 @@ typedef unsigned int (*anim_fx_fn)(bool first, void **pnext);
 /** Stop animation forever */
 extern unsigned int anim_fx_stop(bool first, void **pnext_fx);
 
-/** Blink stars forever */
+/** Shimmer stars forever */
 extern unsigned int anim_fx_stars_shimmer(bool first, void **pnext_fx);
-
-/** Fade in the stars to 3/4 brightness, then blink forever */
-extern unsigned int anim_fx_stars_fade_in(bool first, void **pnext_fx);
 
 /** Fade in the topper to max brightness, then stop */
 extern unsigned int anim_fx_topper_fade_in(bool first, void **pnext_fx);
