@@ -599,6 +599,7 @@ anim_fx_balls_shimmer(bool first, void **pnext_fx)
 
 /** Pool of the balls effect-stepping functions to choose from randomly */
 static const anim_fx_fn ANIM_FX_BALLS_RANDOM_POOL[] = {
+    anim_fx_balls_fade_in_and_out,
     anim_fx_balls_wave,
     anim_fx_balls_glitter,
     anim_fx_balls_cycle_colors,
@@ -607,8 +608,7 @@ static const anim_fx_fn ANIM_FX_BALLS_RANDOM_POOL[] = {
 };
 
 /** Index of the balls effect-stepping function chosen last */
-static size_t ANIM_FX_BALLS_RANDOM_LAST =
-                    ARRAY_SIZE(ANIM_FX_BALLS_RANDOM_POOL);
+static size_t ANIM_FX_BALLS_RANDOM_LAST = 0;
 
 unsigned int
 anim_fx_balls_random(bool first, void **pnext_fx)
