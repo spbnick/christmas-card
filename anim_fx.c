@@ -497,7 +497,7 @@ anim_fx_balls_shimmer(bool first, void **pnext_fx)
                              /* Fade-in/out duration, ms */
                              7000,
                              /* Effect body duration, ms */
-                             30000);
+                             60000);
     }
 
     if (anim_fx_shimmer_step(&shimmer, &delay)) {
