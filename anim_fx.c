@@ -33,7 +33,7 @@ anim_fx_stars_shimmer(bool first, void **pnext_fx)
                              /* Max bright state duration, ms */
                              10000,
                              /* Dimmed state brightness */
-                             LEDS_BR_MAX / 3,
+                             LEDS_BR_MAX / 2,
                              /* Max dimmed state duration, ms */
                              300,
                              /* Fade-in/out duration */
