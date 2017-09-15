@@ -517,6 +517,75 @@ anim_fx_balls_shimmer(bool first, void **pnext_fx)
     return delay;
 }
 
+unsigned int
+anim_fx_balls_shoot(bool first, void **pnext_fx)
+{
+    /* True if shooting balls "on", false if "off" */
+    static bool shooting_on;
+    /* Remaining number of balls to shoot */
+    static uint8_t remaining;
+    /* Index of the ball being shot */
+    static uint8_t idx;
+    /* Brightness of the ball being shot */
+    static int8_t br;
+
+    if (first) {
+        shooting_on = true;
+        /* We just shot a non-existing ball, pick another */
+        remaining = LEDS_BALLS_NUM;
+        idx = LEDS_BALLS_NUM;
+        br = LEDS_BR_MAX;
+    }
+
+    /* If we're still shooting the current ball */
+    if (shooting_on ? (br < LEDS_BR_MAX) : (br > 0)) {
+        br = shooting_on ? MIN(br + 8, LEDS_BR_MAX)
+                         : MAX(br - 8, 0);
+    } else {
+        /* If there are balls left to shoot */
+        if (remaining > 0) {
+            size_t pos;
+
+            /* Pick a new ball to shoot */
+            pos = ((prng_next() & 0xffff) * remaining) >> 16;
+            for (idx = 0; idx < LEDS_BALLS_NUM; idx++) {
+                if (LEDS_BR[LEDS_BALLS_LIST[idx]] ==
+                        (shooting_on ? 0 : LEDS_BR_MAX)) {
+                    if (pos == 0) {
+                        break;
+                    } else {
+                        pos--;
+                    }
+                }
+            }
+            remaining--;
+
+            /* Start changing brightness */
+            br = shooting_on ? 7 : (LEDS_BR_MAX - 7);
+        /* Else, there are NO balls left to shoot */
+        } else {
+            /* If we were shooting on */
+            if (shooting_on) {
+                shooting_on = false;
+                /* We just shot a non-existing ball, pick another */
+                remaining = LEDS_BALLS_NUM;
+                idx = LEDS_BALLS_NUM;
+                br = 0;
+                /* Wait for satisfaction */
+                return 10000;
+            /* Else, we were shooting off */
+            } else {
+                *pnext_fx = anim_fx_balls_random;
+                /* Wait for satisfaction */
+                return 3000;
+            }
+        }
+    }
+
+    LEDS_BR[LEDS_BALLS_LIST[idx]] = br;
+    return 75;
+}
+
 /** Pool of the balls effect-stepping functions to choose from randomly */
 static const anim_fx_fn ANIM_FX_BALLS_RANDOM_POOL[] = {
     anim_fx_balls_fade_in_and_out,
@@ -525,6 +594,7 @@ static const anim_fx_fn ANIM_FX_BALLS_RANDOM_POOL[] = {
     anim_fx_balls_cycle_colors,
     anim_fx_balls_snow,
     anim_fx_balls_shimmer,
+    anim_fx_balls_shoot,
 };
 
 /** Index of the balls effect-stepping function chosen last */
