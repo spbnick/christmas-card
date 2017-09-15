@@ -363,6 +363,9 @@ anim_fx_balls_snow(bool first, void **pnext_fx)
     /* Ball brightness */
     static uint8_t ball_br;
 
+    /* True if we're scheduling lighting the next ball */
+    bool moving;
+
     size_t i;
 
     if (first) {
@@ -455,6 +458,9 @@ anim_fx_balls_snow(bool first, void **pnext_fx)
              ball_row++);
     }
 
+    /* Check if we're starting the new position */
+    moving = (ball_br == 0);
+
     /* Increase ball brightness */
     ball_br += LEDS_BR_NUM / 8;
     if (ball_br > LEDS_BR_MAX) {
@@ -473,7 +479,12 @@ anim_fx_balls_snow(bool first, void **pnext_fx)
         LEDS_BR[LEDS_BALLS_ROW_LIST[ball_row][ball_col]] = ball_br;
     }
 
-    return 75;
+    /*
+     * Specify how much to wait before applying the change.
+     * Wait longer before lighting the next ball so fully-lighted ball would
+     * stay bright longer.
+     */
+    return moving ? 250 : 75;
 }
 
 unsigned int
