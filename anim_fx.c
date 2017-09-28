@@ -21,28 +21,34 @@ anim_fx_stop(bool first, void **pnext_fx)
 unsigned int
 anim_fx_stars_shimmer(bool first, void **pnext_fx)
 {
-    static struct anim_fx_shimmer shimmer;
-    static struct anim_fx_shimmer_led led_list[LEDS_STARS_NUM];
+    static struct anim_fx_script script;
+    static struct anim_fx_script_seg seg_list[ANIM_FX_SHIMMER_SEG_IDX_NUM];
+    static struct anim_fx_script_led led_list[LEDS_STARS_NUM];
+    static struct anim_fx_script_led_seg
+                            led_seg_list_list[LEDS_STARS_NUM *
+                                              ANIM_FX_SHIMMER_SEG_IDX_NUM];
     unsigned int delay;
 
     if (first) {
-        anim_fx_shimmer_init(&shimmer,
-                             led_list, LEDS_STARS_LIST, LEDS_STARS_NUM,
-                             /* Bright state brightness */
-                             LEDS_BR_MAX * 3 / 4,
-                             /* Max bright state duration, ms */
-                             10000,
-                             /* Dimmed state brightness */
-                             LEDS_BR_MAX / 2,
-                             /* Max dimmed state duration, ms */
-                             300,
-                             /* Fade-in/out duration */
-                             3000,
-                             /* Effect body duration, ms (infinity) */
-                             UINT_MAX);
+        anim_fx_shimmer_script_init(
+                            &script, seg_list,
+                            LEDS_STARS_NUM, LEDS_STARS_LIST,
+                            led_list, led_seg_list_list,
+                            /* Bright state brightness */
+                            LEDS_BR_MAX * 3 / 4,
+                            /* Max bright state duration, ms */
+                            10000,
+                            /* Dimmed state brightness */
+                            LEDS_BR_MAX / 2,
+                            /* Max dimmed state duration, ms */
+                            300,
+                            /* Fade-in/out duration */
+                            3000,
+                            /* Effect body duration, ms (infinity) */
+                            UINT_MAX);
     }
 
-    if (anim_fx_shimmer_step(&shimmer, &delay)) {
+    if (anim_fx_script_step(&script, &delay)) {
         *pnext_fx = anim_fx_stop;
     }
     return delay;
@@ -490,28 +496,34 @@ anim_fx_balls_snow(bool first, void **pnext_fx)
 unsigned int
 anim_fx_balls_shimmer(bool first, void **pnext_fx)
 {
-    static struct anim_fx_shimmer shimmer;
-    static struct anim_fx_shimmer_led led_list[ARRAY_SIZE(LEDS_BALLS_LIST)];
+    static struct anim_fx_script script;
+    static struct anim_fx_script_seg seg_list[ANIM_FX_SHIMMER_SEG_IDX_NUM];
+    static struct anim_fx_script_led led_list[LEDS_BALLS_NUM];
+    static struct anim_fx_script_led_seg
+                            led_seg_list_list[LEDS_BALLS_NUM *
+                                              ANIM_FX_SHIMMER_SEG_IDX_NUM];
     unsigned int delay;
 
     if (first) {
-        anim_fx_shimmer_init(&shimmer,
-                             led_list, LEDS_BALLS_LIST, ARRAY_SIZE(led_list),
-                             /* Bright state brightness */
-                             LEDS_BR_MAX,
-                             /* Max bright state duration, ms */
-                             10000,
-                             /* Dimmed state brightness */
-                             LEDS_BR_MAX * 3 / 4,
-                             /* Max dimmed state duration, ms */
-                             300,
-                             /* Fade-in/out duration, ms */
-                             7000,
-                             /* Effect body duration, ms */
-                             60000);
+        anim_fx_shimmer_script_init(
+                            &script, seg_list,
+                            LEDS_BALLS_NUM, LEDS_BALLS_LIST,
+                            led_list, led_seg_list_list,
+                            /* Bright state brightness */
+                            LEDS_BR_MAX,
+                            /* Max bright state duration, ms */
+                            10000,
+                            /* Dimmed state brightness */
+                            LEDS_BR_MAX * 3 / 4,
+                            /* Max dimmed state duration, ms */
+                            300,
+                            /* Fade-in/out duration, ms */
+                            7000,
+                            /* Effect body duration, ms */
+                            60000);
     }
 
-    if (anim_fx_shimmer_step(&shimmer, &delay)) {
+    if (anim_fx_script_step(&script, &delay)) {
         *pnext_fx = anim_fx_balls_random;
     }
     return delay;
