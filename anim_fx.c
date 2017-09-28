@@ -2,7 +2,7 @@
  * Card animation effect-stepping functions
  */
 
-#include "anim_fx_shimmer.h"
+#include "anim_fx_script.h"
 #include "anim_fx.h"
 #include "leds.h"
 #include <prng.h>
@@ -22,34 +22,49 @@ unsigned int
 anim_fx_stars_shimmer(bool first, void **pnext_fx)
 {
     static struct anim_fx_script script;
-    static struct anim_fx_script_seg seg_list[ANIM_FX_SHIMMER_SEG_IDX_NUM];
+    static const struct anim_fx_script_seg seg_list[] = {
+        {.step_num_min = 1,
+         .step_num_max = 1,
+         .step_br_off = 0,
+         .step_delay_min = 0,
+         .step_delay_max = 10000},
+        {.step_num_min = 5,
+         .step_num_max = 5,
+         .step_br_off = -3,
+         .step_delay_min = 25,
+         .step_delay_max = 25},
+        {.step_num_min = 1,
+         .step_num_max = 1,
+         .step_br_off = 0,
+         .step_delay_min = 0,
+         .step_delay_max = 300},
+        {.step_num_min = 5,
+         .step_num_max = 5,
+         .step_br_off = 3,
+         .step_delay_min = 25,
+         .step_delay_max = 25}
+    };
     static struct anim_fx_script_led led_list[LEDS_STARS_NUM];
     static struct anim_fx_script_led_seg
                             led_seg_list_list[LEDS_STARS_NUM *
-                                              ANIM_FX_SHIMMER_SEG_IDX_NUM];
+                                              ARRAY_SIZE(seg_list)];
     unsigned int delay;
 
     if (first) {
-        anim_fx_shimmer_script_init(
-                            &script, seg_list,
-                            LEDS_STARS_NUM, LEDS_STARS_LIST,
-                            led_list, led_seg_list_list,
-                            /* Bright state brightness */
-                            LEDS_BR_MAX * 3 / 4,
-                            /* Max bright state duration, ms */
-                            10000,
-                            /* Dimmed state brightness */
-                            LEDS_BR_MAX / 2,
-                            /* Max dimmed state duration, ms */
-                            300,
-                            /* Fade-in/out duration */
-                            3000,
-                            /* Effect body duration, ms (infinity) */
-                            UINT_MAX);
+        anim_fx_script_init(
+                    &script, ARRAY_SIZE(seg_list), seg_list,
+                    LEDS_STARS_NUM, LEDS_STARS_LIST,
+                    led_list, led_seg_list_list,
+                    /* Initial brightness */
+                    LEDS_BR_MAX * 3 / 4,
+                    /* Fade-in/out duration, ms */
+                    3000,
+                    /* Effect body duration, ms (infinity) */
+                    UINT_MAX);
     }
 
     if (anim_fx_script_step(&script, &delay)) {
-        *pnext_fx = anim_fx_stop;
+        *pnext_fx = anim_fx_balls_random;
     }
     return delay;
 }
@@ -497,30 +512,45 @@ unsigned int
 anim_fx_balls_shimmer(bool first, void **pnext_fx)
 {
     static struct anim_fx_script script;
-    static struct anim_fx_script_seg seg_list[ANIM_FX_SHIMMER_SEG_IDX_NUM];
+    static const struct anim_fx_script_seg seg_list[] = {
+        {.step_num_min = 1,
+         .step_num_max = 1,
+         .step_br_off = 0,
+         .step_delay_min = 0,
+         .step_delay_max = 3000},
+        {.step_num_min = 5,
+         .step_num_max = 5,
+         .step_br_off = -2,
+         .step_delay_min = 56,
+         .step_delay_max = 56},
+        {.step_num_min = 1,
+         .step_num_max = 1,
+         .step_br_off = 0,
+         .step_delay_min = 300,
+         .step_delay_max = 600},
+        {.step_num_min = 5,
+         .step_num_max = 5,
+         .step_br_off = 2,
+         .step_delay_min = 56,
+         .step_delay_max = 56}
+    };
     static struct anim_fx_script_led led_list[LEDS_BALLS_NUM];
     static struct anim_fx_script_led_seg
                             led_seg_list_list[LEDS_BALLS_NUM *
-                                              ANIM_FX_SHIMMER_SEG_IDX_NUM];
+                                              ARRAY_SIZE(seg_list)];
     unsigned int delay;
 
     if (first) {
-        anim_fx_shimmer_script_init(
-                            &script, seg_list,
-                            LEDS_BALLS_NUM, LEDS_BALLS_LIST,
-                            led_list, led_seg_list_list,
-                            /* Bright state brightness */
-                            LEDS_BR_MAX,
-                            /* Max bright state duration, ms */
-                            10000,
-                            /* Dimmed state brightness */
-                            LEDS_BR_MAX * 3 / 4,
-                            /* Max dimmed state duration, ms */
-                            300,
-                            /* Fade-in/out duration, ms */
-                            7000,
-                            /* Effect body duration, ms */
-                            60000);
+        anim_fx_script_init(
+                    &script, ARRAY_SIZE(seg_list), seg_list,
+                    LEDS_BALLS_NUM, LEDS_BALLS_LIST,
+                    led_list, led_seg_list_list,
+                    /* Initial brightness */
+                    LEDS_BR_MAX,
+                    /* Fade-in/out duration, ms */
+                    3000,
+                    /* Effect body duration, ms */
+                    60000);
     }
 
     if (anim_fx_script_step(&script, &delay)) {

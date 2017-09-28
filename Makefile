@@ -8,7 +8,6 @@ LIBS = -lstammer
 MODS = \
     leds \
     anim_fx_script \
-    anim_fx_shimmer \
     anim_fx \
     anim \
     card
