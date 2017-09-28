@@ -540,6 +540,8 @@ anim_fx_balls_shoot(bool first, void **pnext_fx)
     static uint8_t idx;
     /* Brightness of the ball being shot */
     static int8_t br;
+    /* True if scheduling a new ball shot */
+    static bool new;
 
     if (first) {
         shooting_on = true;
@@ -553,10 +555,15 @@ anim_fx_balls_shoot(bool first, void **pnext_fx)
     if (shooting_on ? (br < LEDS_BR_MAX) : (br > 0)) {
         br = shooting_on ? MIN(br + 8, LEDS_BR_MAX)
                          : MAX(br - 8, 0);
+        /* Continuing with a ball */
+        new = false;
     } else {
         /* If there are balls left to shoot */
         if (remaining > 0) {
             size_t pos;
+
+            /* Starting a new ball unless it's the first */
+            new = (remaining < LEDS_BALLS_NUM);
 
             /* Pick a new ball to shoot */
             pos = ((prng_next() & 0xffff) * remaining) >> 16;
@@ -595,7 +602,8 @@ anim_fx_balls_shoot(bool first, void **pnext_fx)
     }
 
     LEDS_BR[LEDS_BALLS_LIST[idx]] = br;
-    return 75;
+    /* Delay before shooting a new ball */
+    return new ? 1000 : 75;
 }
 
 /** Pool of the balls effect-stepping functions to choose from randomly */
