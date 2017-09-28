@@ -54,7 +54,7 @@ extern unsigned int anim_fx_balls_snow(bool first, void **pnext_fx);
 /** Shimmer the balls, then run random balls effects forever */
 extern unsigned int anim_fx_balls_shimmer(bool first, void **pnext_fx);
 
-/** Shoot the balls onto and off the tree, run random effects forever  */
+/** Shoot the balls onto and off the tree, run random effects forever */
 extern unsigned int anim_fx_balls_shoot(bool first, void **pnext_fx);
 
 /** Run random balls effects forever */
