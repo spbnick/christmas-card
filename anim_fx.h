@@ -60,4 +60,7 @@ extern unsigned int anim_fx_balls_shoot(bool first, void **pnext_fx);
 /** Run random balls effects forever */
 extern unsigned int anim_fx_balls_random(bool first, void **pnext_fx);
 
+/** Flare the balls on and slowly off, run random effects forever */
+extern unsigned int anim_fx_balls_flare(bool first, void **pnext_fx);
+
 #endif /* _ANIM_FX_H */

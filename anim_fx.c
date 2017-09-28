@@ -530,6 +530,57 @@ anim_fx_balls_shimmer(bool first, void **pnext_fx)
 }
 
 unsigned int
+anim_fx_balls_flare(bool first, void **pnext_fx)
+{
+    static struct anim_fx_script script;
+    static const struct anim_fx_script_seg seg_list[] = {
+        {.step_num_min = 1,
+         .step_num_max = 1,
+         .step_br_off = 0,
+         .step_delay_min = 0,
+         .step_delay_max = 3000},
+        {.step_num_min = 7,
+         .step_num_max = 7,
+         .step_br_off = 9,
+         .step_delay_min = 27,
+         .step_delay_max = 27},
+        {.step_num_min = 1,
+         .step_num_max = 1,
+         .step_br_off = 0,
+         .step_delay_min = 200,
+         .step_delay_max = 200},
+        {.step_num_min = 21,
+         .step_num_max = 21,
+         .step_br_off = -3,
+         .step_delay_min = 60,
+         .step_delay_max = 60}
+    };
+    static struct anim_fx_script_led led_list[LEDS_BALLS_NUM];
+    static struct anim_fx_script_led_seg
+                            led_seg_list_list[LEDS_BALLS_NUM *
+                                              ARRAY_SIZE(seg_list)];
+    unsigned int delay;
+
+    if (first) {
+        anim_fx_script_init(
+                    &script, ARRAY_SIZE(seg_list), seg_list,
+                    LEDS_BALLS_NUM, LEDS_BALLS_LIST,
+                    led_list, led_seg_list_list,
+                    /* Initial brightness */
+                    0,
+                    /* Fade-in/out duration, ms */
+                    2000,
+                    /* Effect body duration, ms */
+                    60000);
+    }
+
+    if (anim_fx_script_step(&script, &delay)) {
+        *pnext_fx = anim_fx_balls_random;
+    }
+    return delay;
+}
+
+unsigned int
 anim_fx_balls_shoot(bool first, void **pnext_fx)
 {
     /* True if shooting balls "on", false if "off" */
@@ -615,6 +666,7 @@ static const anim_fx_fn ANIM_FX_BALLS_RANDOM_POOL[] = {
     anim_fx_balls_snow,
     anim_fx_balls_shimmer,
     anim_fx_balls_shoot,
+    anim_fx_balls_flare,
 };
 
 /** Index of the balls effect-stepping function chosen last */
