@@ -26,23 +26,23 @@ anim_fx_stars_shimmer(bool first, void **pnext_fx)
         {.step_num_min = 1,
          .step_num_max = 1,
          .step_br_off = 0,
-         .step_delay_min = 0,
-         .step_delay_max = 10000},
+         .step_delay_min = 5000,
+         .step_delay_max = 15000},
         {.step_num_min = 5,
          .step_num_max = 5,
          .step_br_off = -3,
-         .step_delay_min = 25,
-         .step_delay_max = 25},
+         .step_delay_min = 40,
+         .step_delay_max = 40},
         {.step_num_min = 1,
          .step_num_max = 1,
          .step_br_off = 0,
-         .step_delay_min = 0,
-         .step_delay_max = 300},
+         .step_delay_min = 400,
+         .step_delay_max = 1000},
         {.step_num_min = 5,
          .step_num_max = 5,
          .step_br_off = 3,
-         .step_delay_min = 25,
-         .step_delay_max = 25}
+         .step_delay_min = 40,
+         .step_delay_max = 40}
     };
     static struct anim_fx_script_led led_list[LEDS_STARS_NUM];
     static struct anim_fx_script_led_seg
