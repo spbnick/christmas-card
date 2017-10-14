@@ -222,7 +222,7 @@ anim_fx_balls_glitter(bool first, void **pnext_fx)
         STATE_NUM
     };
 
-    /* State of a bal */
+    /* State of a ball */
     struct ball {
         /* Current state */
         enum state      state;
