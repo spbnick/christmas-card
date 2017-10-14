@@ -567,23 +567,23 @@ anim_fx_balls_flare(bool first, void **pnext_fx)
         {.step_num_min = 1,
          .step_num_max = 1,
          .step_br_off = 0,
-         .step_delay_min = 0,
-         .step_delay_max = 3000},
+         .step_delay_min = 3000,
+         .step_delay_max = 10000},
         {.step_num_min = 7,
          .step_num_max = 7,
          .step_br_off = 9,
-         .step_delay_min = 27,
-         .step_delay_max = 27},
+         .step_delay_min = 22,
+         .step_delay_max = 22},
         {.step_num_min = 1,
          .step_num_max = 1,
          .step_br_off = 0,
-         .step_delay_min = 200,
-         .step_delay_max = 200},
+         .step_delay_min = 500,
+         .step_delay_max = 500},
         {.step_num_min = 21,
          .step_num_max = 21,
          .step_br_off = -3,
-         .step_delay_min = 60,
-         .step_delay_max = 60}
+         .step_delay_min = 80,
+         .step_delay_max = 80}
     };
     static struct anim_fx_script_led led_list[LEDS_BALLS_NUM];
     static struct anim_fx_script_led_seg
