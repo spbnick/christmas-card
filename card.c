@@ -48,10 +48,6 @@ systick_handler(void)
     unsigned int step = SYSTICK_STEP;
     unsigned int pwm_step = (step >> 1) & LEDS_BR_MAX;
 
-    if (step % 24000 == 0) {
-        GPIO_C->odr ^= GPIO_ODR_ODR13_MASK;
-    }
-
     /* If it's the odd tick */
     if (step & 1) {
         leds_step_load();
@@ -170,9 +166,6 @@ main(void)
     /* A7 - MOSI, alternate function push-pull */
     gpio_pin_conf(GPIO_A, 7,
                   GPIO_MODE_OUTPUT_2MHZ, GPIO_CNF_OUTPUT_AF_PUSH_PULL);
-    /* Set PC13 to general purpose open-drain output, max speed 2MHz */
-    gpio_pin_conf(GPIO_C, 13,
-                  GPIO_MODE_OUTPUT_2MHZ, GPIO_CNF_OUTPUT_GP_OPEN_DRAIN);
 
     /*
      * Configure the SPI
