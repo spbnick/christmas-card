@@ -212,102 +212,43 @@ anim_fx_balls_wave(bool first, void **pnext_fx)
 unsigned int
 anim_fx_balls_glitter(bool first, void **pnext_fx)
 {
-    /* Possible state of a ball */
-    enum state {
-        /* Off */
-        STATE_OFF,
-        /* On */
-        STATE_ON,
-        /* Number of states, not a valid state */
-        STATE_NUM
+    static struct anim_fx_script script;
+    static const struct anim_fx_script_seg seg_list[] = {
+        {.step_num_min = 1,
+         .step_num_max = 1,
+         .step_br_off = LEDS_BR_MAX,
+         /* FIXME Setting this to zero crashes the program eventually */
+         .step_delay_min = 10,
+         .step_delay_max = 300},
+        {.step_num_min = 1,
+         .step_num_max = 1,
+         .step_br_off = -LEDS_BR_MAX,
+         .step_delay_min = 10,
+         .step_delay_max = 10},
     };
-
-    /* State of a ball */
-    struct ball {
-        /* Current state */
-        enum state      state;
-        /* Delay for each state */
-        unsigned int    state_delay[STATE_NUM];
-    };
-
-    /* State of each ball this cycle */
-    static struct ball ball_list[LEDS_BALLS_NUM];
-    /* Delay since the last invocation */
-    static unsigned int delay;
-
-    static unsigned int step;
-
-    unsigned int new_delay;
-    struct ball *ball;
-    size_t i, j;
-    uint8_t br;
+    static struct anim_fx_script_led led_list[LEDS_BALLS_NUM];
+    static struct anim_fx_script_led_seg
+                            led_seg_list_list[LEDS_BALLS_NUM *
+                                              ARRAY_SIZE(seg_list)];
+    unsigned int delay;
 
     if (first) {
-        step = 0;
-        delay = 0;
-        for (i = 0; i < ARRAY_SIZE(ball_list); i++) {
-            ball = &ball_list[i];
-            ball->state = STATE_ON;
-            for (j = 0; j < ARRAY_SIZE(ball->state_delay); j++) {
-                ball->state_delay[j] = 0;
-            }
-        }
+        anim_fx_script_init(
+                    &script, ARRAY_SIZE(seg_list), seg_list,
+                    LEDS_BALLS_NUM, LEDS_BALLS_LIST,
+                    led_list, led_seg_list_list,
+                    /* Initial brightness */
+                    0,
+                    /* Fade-in/out duration, ms */
+                    3000,
+                    /* Effect body duration, ms */
+                    60000);
     }
 
-    /* Calculate "on" brightness for this step */
-    if ((step & 0xe00) == 0) {
-        br = (step * LEDS_BR_NUM) >> 9;
-    } else if ((step & 0xe00) == 0xe00) {
-        br = ((0x1ff - (step & 0x1ff)) * LEDS_BR_NUM) >> 9;
-    } else {
-        br = LEDS_BR_MAX;
-    }
-
-    /*
-     * Advance the state of every blinking ball
-     */
-    new_delay = UINT_MAX;
-    for (i = 0; i < ARRAY_SIZE(ball_list); i++) {
-        ball = &ball_list[i];
-        /* If the current state delay is over */
-        if ((ball->state_delay[ball->state] -= delay) == 0) {
-            /* If cycle is over */
-            if (ball->state == STATE_ON) {
-                ball->state_delay[STATE_OFF] =
-                    ((prng_next() & 0xffff) * 291) >> 16;
-                ball->state_delay[STATE_ON] = 10;
-                /* Off now */
-                ball->state = STATE_OFF;
-                /* A step is complete */
-                step++;
-            } else {
-                ball->state++;
-            }
-        }
-        if (ball->state_delay[ball->state] < new_delay) {
-            new_delay = ball->state_delay[ball->state];
-        }
-    }
-
-    /*
-     * Schedule LED updates of all the balls changing next
-     */
-    for (i = 0; i < ARRAY_SIZE(ball_list); i++) {
-        ball = &ball_list[i];
-        /* If the ball is changing on the next step */
-        if (ball->state_delay[ball->state] == new_delay) {
-            /* Schedule brightness change */
-            LEDS_BR[LEDS_BALLS_LIST[i]] =
-                (ball->state == STATE_OFF) ? br : 0;
-        }
-    }
-
-    if (step == 0xf00) {
+    if (anim_fx_script_step(&script, &delay)) {
         *pnext_fx = anim_fx_balls_random;
     }
-
-    /* Call us for the next change */
-    return (delay = new_delay);
+    return delay;
 }
 
 unsigned int
