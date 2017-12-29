@@ -579,47 +579,45 @@ anim_fx_balls_shoot(bool first, void **pnext_fx)
                          : MAX(br - 8, 0);
         /* Continuing with a ball */
         new = false;
-    } else {
-        /* If there are balls left to shoot */
-        if (remaining > 0) {
-            size_t pos;
+    /* Else, if there are balls left to shoot */
+    } else if (remaining > 0) {
+        size_t pos;
 
-            /* Starting a new ball unless it's the first */
-            new = (remaining < LEDS_BALLS_NUM);
+        /* Starting a new ball unless it's the first */
+        new = (remaining < LEDS_BALLS_NUM);
 
-            /* Pick a new ball to shoot */
-            pos = ((prng_next() & 0xffff) * remaining) >> 16;
-            for (idx = 0; idx < LEDS_BALLS_NUM; idx++) {
-                if (LEDS_BR[LEDS_BALLS_LIST[idx]] ==
-                        (shooting_on ? 0 : LEDS_BR_MAX)) {
-                    if (pos == 0) {
-                        break;
-                    } else {
-                        pos--;
-                    }
+        /* Pick a new ball to shoot */
+        pos = ((prng_next() & 0xffff) * remaining) >> 16;
+        for (idx = 0; idx < LEDS_BALLS_NUM; idx++) {
+            if (LEDS_BR[LEDS_BALLS_LIST[idx]] ==
+                    (shooting_on ? 0 : LEDS_BR_MAX)) {
+                if (pos == 0) {
+                    break;
+                } else {
+                    pos--;
                 }
             }
-            remaining--;
+        }
+        remaining--;
 
-            /* Start changing brightness */
-            br = shooting_on ? 7 : (LEDS_BR_MAX - 7);
-        /* Else, there are NO balls left to shoot */
+        /* Start changing brightness */
+        br = shooting_on ? 7 : (LEDS_BR_MAX - 7);
+    /* Else, there are NO balls left to shoot */
+    } else {
+        /* If we were shooting on */
+        if (shooting_on) {
+            shooting_on = false;
+            /* We just shot a non-existing ball, pick another */
+            remaining = LEDS_BALLS_NUM;
+            idx = LEDS_BALLS_NUM;
+            br = 0;
+            /* Wait for satisfaction */
+            return 10000;
+        /* Else, we were shooting off */
         } else {
-            /* If we were shooting on */
-            if (shooting_on) {
-                shooting_on = false;
-                /* We just shot a non-existing ball, pick another */
-                remaining = LEDS_BALLS_NUM;
-                idx = LEDS_BALLS_NUM;
-                br = 0;
-                /* Wait for satisfaction */
-                return 10000;
-            /* Else, we were shooting off */
-            } else {
-                *pnext_fx = anim_fx_balls_random;
-                /* Wait for satisfaction */
-                return 3000;
-            }
+            *pnext_fx = anim_fx_balls_random;
+            /* Wait for satisfaction */
+            return 3000;
         }
     }
 
