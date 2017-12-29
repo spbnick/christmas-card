@@ -566,11 +566,21 @@ anim_fx_balls_shoot(bool first, void **pnext_fx)
     static bool new;
 
     if (first) {
+        size_t i;
         shooting_on = true;
         /* We just shot a non-existing ball, pick another */
         remaining = LEDS_BALLS_NUM;
         idx = LEDS_BALLS_NUM;
         br = LEDS_BR_MAX;
+        /*
+         * FIXME Clearing all LEDs to zero brightness, because some effects
+         * (perhaps anim_fx_balls_wave) might leave them not completely dark,
+         * breaking this effect. Fix other effects instead, and add
+         * verification for darkness between effects.
+         */
+        for (i = 0; i < LEDS_BALLS_NUM; i++) {
+            LEDS_BR[LEDS_BALLS_LIST[i]] = 0;
+        }
     }
 
     /* If we're still shooting the current ball */
