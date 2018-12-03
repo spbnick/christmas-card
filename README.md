@@ -73,3 +73,4 @@ Photos
 [thumb_rotation]: thumbs/rotation.gif
 [thumb_demo]: thumbs/demo.jpg
 [video_demo]: https://youtu.be/78oc3YEZnP0
+[libstammer]: https://github.com/spbnick/libstammer
