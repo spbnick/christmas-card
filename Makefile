@@ -28,7 +28,8 @@ all: card.bin
 	$(CCPFX)objcopy -O binary $< $@
 
 card.elf: $(OBJS) $(LDSCRIPTS)
-	$(CCPFX)ld $(LDFLAGS) -T libstammer.ld -o $@ $(OBJS) $(LIBS)
+	$(CCPFX)gcc -nostartfiles $(COMMON_CFLAGS) $(CFLAGS) $(LDFLAGS) \
+		-T libstammer.ld -o $@ $(OBJS) $(LIBS)
 
 clean:
 	rm -f $(OBJS)
